@@ -6,7 +6,6 @@ fictive_flavor_tags: list[str] = ["Demon", "Fire", "Ghost", "Cursed", "Spite", "
 sin_flavor_tags: list[str] = ["Pride", "Lust", "Wrath", "Envy", "Sloth", "Greed", "Gluttony", "Fraud", "Treachery"]
 all_flavor_tags: list[str] = real_flavor_tags + fictive_flavor_tags + sin_flavor_tags
 
-
 class Rarity(Enum):
     Common = auto()
     Uncommon = auto()
