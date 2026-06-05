@@ -1,0 +1,575 @@
+from enum import Enum, auto
+
+real_flavor_tags: list[str] = ["Clean", "Spirit", "Warm", "Agave", "Floral", "Sweet", "Grape", "Bubbly",
+                               "Rice", "Subtle", "Fruit", "Anise", "Void", "Herbal", "Grain", "Pure", "Rough", "Light"]
+fictive_flavor_tags: list[str] = ["Demon", "Fire", "Ghost", "Cursed", "Spite", "Clarity", "Wild"]
+sin_flavor_tags: list[str] = ["Pride", "Lust", "Wrath", "Envy", "Sloth", "Greed", "Gluttony", "Fraud", "Treachery"]
+all_flavor_tags: list[str] = real_flavor_tags + fictive_flavor_tags + sin_flavor_tags
+
+
+class Rarity(Enum):
+    Common = auto()
+    Uncommon = auto()
+    Rare = auto()
+    Cursed = auto()
+    Sin = auto()
+    Special = auto()  # Reserved for shots that can't come up naturally in a standard round
+
+
+class Visibility(Enum):
+    Revealed = auto()
+    Hidden = auto()
+    Partial = auto()
+
+
+class EffectTrigger(Enum):
+    Immediate = auto()
+    Delayed = auto()
+    Cumulative = auto()
+    OnCombo = auto()
+
+
+class Alcohol:
+    def __init__(self,
+                 name: str,
+                 abv: float,
+                 rarity: Rarity,
+                 effect: None,  # TODO: add effects
+                 flavor_tags: list[str],
+                 nina_reaction: dict[str, list[str]] | None = None,  # All nones are placeholders for the moment
+                 visibility: Visibility | None = None,
+                 effect_trigger: EffectTrigger | None = None):
+        self.name = name
+        self.abv = abv
+        self.rarity = rarity
+        self.visibility = visibility
+        self.effect = effect
+        self.effect_trigger = effect_trigger
+        self.flavor_tags = flavor_tags
+        self.nina_reaction = nina_reaction
+
+
+# ---- WATER ----------------------------
+"""Water: Not an alcohol, still counts as a shot."""
+shot_water: Alcohol = Alcohol(
+    name="Water",
+    abv=0.0,
+    rarity=Rarity.Special,
+    effect=None,
+    flavor_tags=[]  # Water has no flavor
+)
+
+# ---- REAL ALCOHOLS --------------------
+"""Vodka: The base alcohol. No effect."""
+shot_vodka: Alcohol = Alcohol(
+    name="Vodka",
+    abv=0.4,
+    rarity=Rarity.Common,
+    effect=None,
+    flavor_tags=["Clean", "Spirit"],
+)
+
+"""Bourbon: Slight spite generation."""
+shot_bourbon: Alcohol = Alcohol(
+    name="Bourbon",
+    abv=0.45,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Warmth", +1 Spite the next round
+    flavor_tags=["Warm", "Spirit"],
+)
+
+"""Whiskey: No effect."""
+shot_whiskey: Alcohol = Alcohol(
+    name="Whiskey",
+    abv=0.50,
+    rarity=Rarity.Common,
+    effect=None,
+    flavor_tags=["Rough", "Herbal"],
+)
+
+"""Brandy: No effect."""
+shot_brandy: Alcohol = Alcohol(
+    name="Brandy",
+    abv=0.40,
+    rarity=Rarity.Common,
+    effect=None,
+    flavor_tags=["Fruity", "Warm"],
+)
+
+"""Ale: No effect."""
+shot_ale: Alcohol = Alcohol(
+    name="Ale",
+    abv=0.12,
+    rarity=Rarity.Common,
+    effect=None,
+    flavor_tags=["Rough", "Floral"],
+)
+
+"""Tequila: Gives courage."""
+shot_tequila: Alcohol = Alcohol(
+    name="Tequila",
+    abv=0.38,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Bold", next card costs 0 Spite
+    flavor_tags=["Agave", "Spirit"],
+)
+
+"""Gin: Sharpens senses slightly."""
+shot_gin: Alcohol = Alcohol(
+    name="Gin",
+    abv=0.42,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Clarity", reduces corruption by 5% for the turn
+    flavor_tags=["Floral", "Spirit"],
+)
+
+"""Red Wine: Delayed BAC gain."""
+shot_red_wine: Alcohol = Alcohol(
+    name="Red Wine",
+    abv=0.14,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Slow Burn", BAC gain gets delayed by one round
+    flavor_tags=["Sweet", "Grape"],
+)
+
+"""Champagne: Gives a small BAC reduction."""
+shot_champagne: Alcohol = Alcohol(
+    name="Champagne",
+    abv=0.12,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Fizz", reduces BAC by 0.01
+    flavor_tags=["Sweet", "Bubbly"],
+)
+
+"""Rum: Standard. No effect."""
+shot_rum: Alcohol = Alcohol(
+    name="Rum",
+    abv=0.40,
+    rarity=Rarity.Common,
+    effect=None,
+    flavor_tags=["Warm", "Spirit"],
+)
+
+"""Sake: Low ABV but increases the next source of alcohol"""
+shot_sake: Alcohol = Alcohol(
+    name="Sake",
+    abv=0.17,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Creep", +30% BAC from next source
+    flavor_tags=["Rice", "Subtle"],
+)
+
+"""Schnapps: Extremely sweet."""
+shot_schnapps: Alcohol = Alcohol(
+    name="Schnapps",
+    abv=0.2,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Sweet Tooth", immediately triggers sugar combo
+    flavor_tags=["Sweet", "Fruit"],
+)
+
+"""Absinthe: High ABV and corrupts the UI. Nina loves it."""
+shot_absinthe: Alcohol = Alcohol(
+    name="Absinthe",
+    abv=0.68,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Hallucinate", corruption +15%, one glass label randomizes
+    flavor_tags=["Anise", "Void"],
+)
+
+"""Jägermeister: Neutralizes combos."""
+shot_jaegermeister: Alcohol = Alcohol(
+    name="Jägermeister",
+    abv=0.35,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Herbal", immunity to next combo
+    flavor_tags=["Sweet", "Herbal"],
+)
+
+"""Soju: No effect."""
+shot_soju: Alcohol = Alcohol(
+    name="Soju",
+    abv=0.25,
+    rarity=Rarity.Uncommon,
+    effect=None,
+    flavor_tags=["Clean", "Grain"],
+)
+
+"""Everclear: Extremely high ABV. Increases spite and corruption. Impresses Nina."""
+shot_everclear: Alcohol = Alcohol(
+    name="Everclear",
+    abv=0.95,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Burnout", corruption +25%, +1 Spite
+    flavor_tags=["Spirit", "Pure"],
+)
+
+"""Moonshine: Blacks out an UI element for a turn."""
+shot_moonshine: Alcohol = Alcohol(
+    name="Moonshine",
+    abv=0.6,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Blind", One UI Element gets blacked out for a turn
+    flavor_tags=["Grain", "Rough"],
+)
+
+"""Beer: Weak, reduces BAC gain."""
+shot_beer: Alcohol = Alcohol(
+    name="Beer",
+    abv=0.05,
+    rarity=Rarity.Common,
+    effect=None,  # TODO: Effect: name="Filling", reduces BAC gain from next shot
+    flavor_tags=["Light", "Grain"],
+)
+
+# ---- FICTIVE ALCOHOLS -----------------
+"""All alcohol names here are a WIP, they are not final."""
+
+"""Hellfire: Corrupts an UI element permanently and deals double BAC. Nina's favourite."""
+shot_hellfire: Alcohol = Alcohol(
+    name="Hellfire",
+    abv=0.85,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Sear", doubles BAC and permacorrupts
+    flavor_tags=["Demon", "Fire"],
+)
+
+"""Shadowmead: Reverses passive charm/item for the round"""
+shot_shadowmead: Alcohol = Alcohol(
+    name="Shadowmead",
+    abv=0.3,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Invert", active item's effect is reversed for the round
+    flavor_tags=["Void", "Sweet"]
+)
+
+"""Ectofizz: Double or nothing."""
+shot_ectofizz: Alcohol = Alcohol(
+    name="Ectofizz",
+    abv=0.2,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Phase", 50% chance to not gain any BAC and 50% chance it doubles
+    flavor_tags=["Ghost", "Bubbly"],
+)
+
+"""Sip o' Styx: Curse. The next shots will always be hidden."""
+shot_styx: Alcohol = Alcohol(
+    name="Sip o' Styx",
+    abv=0.0,
+    rarity=Rarity.Cursed,
+    effect=None,  # TODO: Effect: name="Curse", The next shots on the table will always be hidden
+    flavor_tags=["Void", "Cursed"],
+)
+
+"""Blooddemon: Shares BAC. Nina doesn't like this one."""
+shot_blooddemon: Alcohol = Alcohol(
+    name="Blooddemon",
+    abv=0.6,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Shared Pain", everyone gains 80% BAC
+    flavor_tags=["Demon", "Warm"],
+)
+
+"""Spritepara: Scales ABV with Spite"""
+shot_sprite: Alcohol = Alcohol(
+    name="Spritepara",
+    abv=0.1,  # TODO: Placeholder. Formula is ((10 + (Spite * 10)) / 100)
+    rarity=Rarity.Rare,
+    effect=None,
+    flavor_tags=["Spirit", "Spite"],
+)
+
+"""Memoria: Reveals all shots next round for all"""
+shot_memoria: Alcohol = Alcohol(
+    name="Memoria",
+    abv=0.15,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Reveal", reveals all shots next round for all players
+    flavor_tags=["Herbal", "Clarity"],
+)
+
+"""Miss Echo: Rewards picking the same spot"""
+shot_echo: Alcohol = Alcohol(
+    name="Miss Echo",
+    abv=0.45,
+    rarity=Rarity.Uncommon,
+    effect=None,
+    flavor_tags=["Spirit", "Void"],
+)
+
+"""Light Starna: Corruption clears but comes back at double rate"""
+shot_starna: Alcohol = Alcohol(
+    name="Light Starna",
+    abv=0.25,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Lucid Flash", clears corruption for one turn, then comes back at x2
+    flavor_tags=["Light", "Pure"],
+)
+
+"""Bittersoul: Nina absolutely hates this."""
+shot_bittersoul: Alcohol = Alcohol(
+    name="Bittersoul",
+    abv=0.5,
+    rarity=Rarity.Uncommon,
+    effect=None,  # TODO: Effect: name="Sour", if Nina drinks this, her mood shifts negatively (Irritated)
+    flavor_tags=["Demon", "Herbal"],
+)
+
+"""Void Dram: Erases one shot if the next round is a standard round, reducing the shot count to 2."""
+shot_void: Alcohol = Alcohol(
+    name="Void",
+    abv=0.35,
+    rarity=Rarity.Cursed,
+    effect=None,  # TODO: Effect: name="Erase", reduces the shot count to 2, if the next round is a standard round.
+    flavor_tags=["Void", "Cursed"]
+)
+
+"""Idunnol Lite: Divine drink."""
+shot_idunn: Alcohol = Alcohol(
+    name="Idunnol Lite",
+    abv=0.22,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Divine", immunity to corruption this round + 1 Card
+    flavor_tags=["Pure", "Light"],
+)
+
+"""Zeusarinha: Fries the drinker's brain for a turn."""
+shot_zeus: Alcohol = Alcohol(
+    name="Zeusarinha",
+    abv=0.55,
+    rarity=Rarity.Rare,
+    effect=None,  # TODO: Effect: name="Shock", either disables Nina's AI for a turn or randomizes your next shot pick
+    flavor_tags=["Spirit", "Wild"],
+)
+
+"""Siopi: Mute the person who drinks."""
+shot_siopi: Alcohol = Alcohol(
+    name="Siopi",
+    abv=0.0,
+    rarity=Rarity.Cursed,
+    effect=None,
+    # TODO: Effect: name="Mute", chat is disabled, locks one card. Atleast Nina can't taunt you if she drinks it.
+    flavor_tags=["Void", "Cursed"],
+)
+
+"""Grandmother's Recipe: Corruption doesn't increace, Nina gains atleast 0.01 BAC no matter what."""
+shot_grandmother: Alcohol = Alcohol(
+    name="Grandmother's Recipe",
+    abv=0.7,
+    rarity=Rarity.Rare,
+    effect=None,
+    # TODO: Effect: name="Nostalgic", corruption level doesn't increase, Nina gains 0.01 BAC no matter what.
+    #  Can trigger special lines.
+    flavor_tags=["Warm", "Pure"],
+)
+
+# ---- SIN ALCOHOLS ---------------------
+"""SUPERBIA Aureola: The Wine of the Proud."""
+shot_pride: Alcohol = Alcohol(
+    name="Aureola",
+    abv=0.38,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Hubris", for 2 rounds after drinking your BAC meter displays 20% lower than it truly is.
+    #  Your corruption percentage reads 15% lower. All stats seem to be in the players favor.
+    #  When the effect expires 3 rounds later, all true numbers get shown.
+    #  If your BAC is >= 0.35, corruption increases by 25%. If you survive without hitting blackout, gain 2 Spite.
+    flavor_tags=["Pride", "Light", "Warm", "Spirit"],
+)
+
+"""AVARITIA L'Usuraio: The Usurer's Draught"""
+shot_greed: Alcohol = Alcohol(
+    name="L'Usuraio",
+    abv=0.15,  # Increases by 5% per shot you drank this run ((shots_drank * 5) / 100). Caps at 75%.
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Accumulate", if Nina's BAC exceeds yours, steal 0.02 BAC from her. Else get 3 Spite.
+    flavor_tags=["Greed", "Spirit", "Wild"],
+)
+
+"""LUXURIA Tempasta Rosata: The Pink Tempest"""
+shot_lust: Alcohol = Alcohol(
+    name="Tempasta Rosata",
+    abv=0.45,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Blown", 1. Nina's affection increases by 0.3. 2. Nina's tension increases by 0.2.
+    #  3. A random card gets destroyed. If affection is >= 0.7, draw one instead. Nina can drink this if Manic or Gone.
+    #  Tension/Corruption drops by 0.15 then.
+    flavor_tags=["Lust", "Sweet", "Demon", "Bubbly"],
+)
+
+"""IRA Sangue dello Stige: Blood of the Styx"""
+shot_wrath: Alcohol = Alcohol(
+    name="Sangue dello Stige",
+    abv=0.6,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Fury", 1. Gain 6 Spite. 2. Disable impatience timer for the next turn.
+    #  Nina's taunts come out as "...!".
+    #  3. Nina's mood shifts to (SMUG -> IRRITATED, TIPSY -> MANIC, MANIC -> MANIC.DESTRUCTIVE). Starts breaking rules.
+    #  Nina can drink this. If she selects this (usually while manic), she slams it down and her mood worsens too. Pity.
+    flavor_tags=["Wrath", "Demon", "Spite", "Fire"]
+)
+
+"""GULA Il Pantano: The Mire"""
+shot_gluttony: Alcohol = Alcohol(
+    name="Il Pantano",
+    abv=0.3,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Cerberus Clause", immediately be forced to drink another shot of choice.
+    #  Cannot skip this. Special: The Mire's Mercy.
+    #  If the second shot is a common shot with ABV <= 20%, Gluttony BAC is halved.
+    #  Nina can pick this and will have the same logic.
+    flavor_tags=["Gluttony", "Grain", "Rough", "Cursed"],
+)
+
+"""ACCIDIA Acque Nere: The Black Waters"""
+shot_sloth: Alcohol = Alcohol(
+    name="Acque Nere",
+    abv=0.2,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Stagnation", Next turn skipped entirely, no BAC gains, no Corruption gains, no effects.
+    #  Special: The Sullen's Irony. If you use Sloth while ahead, the effect applies to Nina instead.
+    flavor_tags=["Sloth", "Void", "Subtle"],
+)
+
+"""INVIDIA Occhio Verde: The Green Eye"""
+shot_envy: Alcohol = Alcohol(
+    name="Occhio Verde",
+    abv=0.1,  # Mirrors the last shot the other person took (minimum 10%)
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Mirror",
+    flavor_tags=["Envy", "Void", "Spirit"],
+)
+
+# GEOGRAPHICAL SINS, EVEN RARER ------------------------------
+
+"""COCYTUS Ghiaccio di Caina: Ice of Caina"""
+shot_caina: Alcohol = Alcohol(
+    name="Ghiaccio di Caina",
+    abv=0.0,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Suspended", All game effects are frozen for 2 turns. Nothing moves.
+    #  Then everything returns to normal. Special: Traitor's Lake.
+    #  If tension >= 0.7, the suspension is broken after one round
+    flavor_tags=["Void", "Cursed", "Clean"],
+)
+
+"""MALEBOLGE Frode Imbottigliata: Bottled Fraud"""
+shot_fraud: Alcohol = Alcohol(
+    name="Frode Imbottigliata",
+    abv=0.5,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Falsifier", All shot labels are randomized including those you have already peeked.
+    #  The contents still stay the same. Nina also picks based on the label. If smug, she detects the fraud.
+    flavor_tags=["Fraud", "Cursed", "Void"]
+)
+
+# THE RAREST DRINK - TREACHERY
+"""PRODITIO Il Terzo Morso: The Third Bite"""
+shot_treachery: Alcohol = Alcohol(
+    name="Il Terzo Morso",
+    abv=0.8,
+    rarity=Rarity.Sin,
+    effect=None,
+    # TODO: Effect: name="Traitor", 1. The next trick card played is successful no matter what.
+    #  2. Tension is set to 1 permanently. AI plays optimally for the rest of the round. She gets serious.
+    #  If Nina drinks this (only possible if it's Nina's Night/She's Gone)
+    #  corruption resets, her affection and tension values get reset (affection stays at 0 tho) and she goes quiet.
+    flavor_tags=["Treachery", "Void", "Cursed", "Anise"],
+)
+
+all_common_alcohols: list[Alcohol] = [shot_vodka, shot_bourbon, shot_tequila, shot_gin, shot_red_wine, shot_champagne,
+                                      shot_rum, shot_schnapps, shot_beer]
+all_uncommon_alcohols: list[Alcohol] = [shot_sake, shot_jaegermeister, shot_soju, shot_moonshine, shot_shadowmead,
+                                        shot_ectofizz, shot_memoria, shot_echo, shot_bittersoul]
+all_rare_alcohols: list[Alcohol] = [shot_absinthe, shot_everclear, shot_hellfire, shot_blooddemon, shot_sprite,
+                                    shot_starna, shot_idunn, shot_zeus, shot_grandmother]
+all_cursed_alcohols: list[Alcohol] = [shot_styx, shot_void, shot_siopi]
+all_sin_alcohols: list[Alcohol] = [shot_pride, shot_greed, shot_lust, shot_gluttony, shot_sloth, shot_fraud, shot_envy,
+                                   shot_wrath, shot_caina, shot_treachery]
+all_special_alcohols: list[Alcohol] = [shot_water]
+all_alcohols: list[Alcohol] = (all_common_alcohols +
+                               all_uncommon_alcohols +
+                               all_rare_alcohols +
+                               all_cursed_alcohols +
+                               all_sin_alcohols +
+                               all_special_alcohols)
+
+
+def flavor_tag_exists(alcohol_list: list[Alcohol]) -> None:
+    """Checks all alcohols to see if the flavor tags match with what's available. If not, raises a ValueError."""
+    all_alcohol_flavor_tag_lists: list[list[str]] = [tag.flavor_tags for tag in alcohol_list]
+    all_alcohol_flavor_tags: list[str] = [tag for tag_list in all_alcohol_flavor_tag_lists for tag in tag_list]
+    for flavor_tag in all_alcohol_flavor_tags:
+        if flavor_tag not in all_flavor_tags:
+            raise ValueError(f"Flavor tag {flavor_tag} not available")
+
+
+# TODO: Make the combos have effect.
+def static_shot_combos(shot1: Alcohol, shot2: Alcohol) -> None:
+    """This function checks the last shot the players (BOTH NINA AND PLAYER) took and compares the flavor tags of both drinks.
+    If they lead to a combo, said combo will be activated.
+    Currently, it doesn't matter if one drink alone already has enough tags to activate the combo,
+    which should be fixed."""
+    flavor_combined = shot1.flavor_tags + shot2.flavor_tags
+
+    # ---- CURSED COMBO ----
+    if "Cursed" in flavor_combined:
+        """Curse destroys any synergies."""
+        ...
+
+    # ---- SUGAR RUSH ----
+    elif flavor_combined.count("Sweet") == 2:
+        """Freezes corruption for two rounds"""
+        ...
+
+    # ---- HELLMOUTH ----
+    elif ("Demon", "Void") in flavor_combined:
+        """Damages Nina for an additional 0.02 BAC no matter what"""
+        ...
+
+    # ---- ALCHEMIST'S ERROR ----
+    elif ("Fire", "Herbal") in flavor_combined:
+        """Both players gain the same BAC from this rounds shots"""
+        ...
+
+    # ---- PASSING THROUGH ----
+    elif ("Ghost", "Pure") in flavor_combined:
+        """Your BAC gain is halved"""
+        ...
+
+    # ---- LIQUID SPITE ----
+    elif ("Spite", "Spirit") in flavor_combined:
+        """Gain 3 Spite"""
+        ...
+
+    # ---- SLOW BURN ----
+    elif flavor_combined.count("Warm") == 2:
+        """BAC gains delayed by 1 round for both players"""
+        ...
+
+    # ---- EVENT HORIZON ----
+    elif flavor_combined.count("Void") == 2:
+        """All shot contents are hidden and cannot be revelead by an means"""
+        ...
+
+    # ---- NINA'S SPECIAL ----
+    elif flavor_combined.count("Demon") == 2:
+        """New round of drinks, no breathing room. Extra bonus round"""
+        ...
+
+    # ---- ECLIPSE ----
+    elif ("Light", "Void") in flavor_combined:
+        """Corruption gets halved, but one card gets destroyed"""
+        ...
+
+
+if __name__ == "__main__":
+    flavor_tag_exists(all_alcohols)

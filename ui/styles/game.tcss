@@ -1,0 +1,99 @@
+/* game.tcss */
+
+
+
+/* The main game screen layout */
+
+GameScreen {
+
+layout: grid;
+
+grid-size: 3  4; /* 3 columns, 4 rows */
+
+grid-rows: 1fr  2fr  1fr  3;
+
+grid-columns: 1fr  2fr  1fr;
+
+}
+
+
+
+/* Shot glasses row — spanning the middle column */
+
+#shots-container {
+
+column-span: 3;
+
+layout: horizontal;
+
+align: center  middle;
+
+height: 100%;
+
+}
+
+
+
+ShotGlass {
+
+width: 18;
+
+height: 8;
+
+margin: 0  2;
+
+border: round $accent;
+
+content-align: center  middle;
+
+}
+
+
+
+/* Ninoula's dialogue panel */
+
+#dialogue-panel {
+
+column-span: 3;
+
+border: heavy $primary;
+
+background: $surface-darken-2;
+
+padding: 1  2;
+
+color: $text;
+
+}
+
+
+
+/* BAC meter on the right */
+
+BACMeter {
+
+border: round $warning;
+
+height: 100%;
+
+}
+
+
+
+/* The corruption effect — dim everything at high BAC */
+
+GameScreen.drunk-moderate Static {
+
+color: $text  70%;
+
+}
+
+
+
+GameScreen.drunk-severe Static {
+
+color: $text  40%;
+
+text-style: italic;
+
+}
