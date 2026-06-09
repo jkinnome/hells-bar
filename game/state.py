@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field, asdict
-from enum import Enum
+from enum import Enum, auto
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -140,11 +140,11 @@ class GameState:
         self.stats.total_bac_consumed += gain
         self.stats.peak_corruption = max(self.stats.peak_corruption, self.corruption)
 
-        if abv > self.stats.highest_abv_drunk:
+        if shot.abv > self.stats.highest_abv_drunk:
             self.stats.highest_abv_drunk = shot.abv
             self.stats.highest_abv_name = shot.name
 
-        if abv < 20:
+        if shot.abv < 20:
             self.stats.current_low_streak += 1
             self.stats.max_low_streak = max(self.stats.max_low_streak, self.stats.current_low_streak)
         else:

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Callable
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from game.state import GameState
-    from game.ninoula import Ninoula
+    from game.ninoula.ninoula import Ninoula
 
 
 class EffectTarget(Enum):
@@ -50,13 +51,19 @@ class Effect:
 
 
 # --- Concrete effect implementations ---
-...
+
+class NoEffect(Effect):
+    name = "None"
+
+    def apply(self, state, nina) -> EffectResult:
+        return EffectResult(description="No effect.")
 
 # --- Effect registy ---
 EFFECT_REGISTRY: dict[str, Effect] = {
-
+    "none": NoEffect(),
 }
 
 
 def get_effect(effect_id: str) -> Effect:
-    return EFFECT_REGISTRY.get(effect_id, ...)  # TODO: replace ... with no effect
+    # noinspection PyTypeChecker
+    return EFFECT_REGISTRY.get(effect_id, NoEffect)

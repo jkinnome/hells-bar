@@ -1,23 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from game.state import GameState
-    from game.ninoula import Ninoula
+    from game.ninoula.ninoula import Ninoula
 
 
 @dataclass
 class ComboResult:
     name: str
     description: str
-    effect_fn: callable
+    effect_fn: Callable
     tags_used: list[str]
 
 
 # Each combo: (frozenset of required tags, name, description, effect_fn)
-COMBO_TABLE: list[tuple[frozenset, str, str, callable]] = [
+COMBO_TABLE: list[tuple[frozenset, str, str, Callable]] = [
     (
         frozenset({"Sweet", "Sweet"}),
         "Sugar Rush",
@@ -103,5 +103,5 @@ def apply_combos(combos: list[ComboResult], state: "GameState",
     for combo in combos:
         combo.effect_fn(state, nina)
         state.stats.combos_triggered += 1
-        messages.append(f"[bold yellow]COMBO:[/bold yellow] {combo.name} — {combo.description}")
+        messages.append(f"[bold yellow]COMBO:[/bold yellow] {combo.name} -- {combo.description}")
     return messages

@@ -38,23 +38,23 @@ class EmotionState:
     Use the provided helpers rather than setting values directly.
     """
 
-    # ── Core ──────────────────────────────────────────────────────────
+    # Core
     bac: float = 0.0  # Blood alcohol content [0, 0.5]
 
-    # ── Relationship axes ──────────────────────────────────────────────
+    # Relationship axes
     affection: float = 0.10  # Slight baseline warmth to start
     tension: float = 0.05  # Very slight baseline wariness
 
-    # ── Run-state axes ────────────────────────────────────────────────
+    # Run-state axes
     engagement: float = 0.50  # Neutral to start; rises quickly if run is interesting
     respect: float = 0.20  # Slight baseline disrespect (you're a mortal, after all)
     suspicion: float = 0.00  # Clean slate every run
 
-    # ── Internal tracking (not serialized as emotion variables) ───────
+    # Internal tracking (not serialized as emotion variables)
     last_abv: float = 0.0  # ABV of the last shot Nina drank
     turns_in_current_mood: int = 0  # How many turns at this mood (resistance tracking)
 
-    # ── Helpers ───────────────────────────────────────────────────────
+    # --- Helpers ---
     @staticmethod
     def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
         return max(lo, min(hi, value))
