@@ -87,10 +87,6 @@ class GameState:
     patience_seconds: float = 8.0
     corruption_rate: float = 1.0
 
-    # ---- Ninoula ----
-    affection: float = 0.0  # 0.0 - 1.0
-    tension: float = 0.0  # 0.0 - 1.0
-
     # ---- Cards & Trinkets ----
     hand: list[str] = field(default_factory=list)  # cards IDs
     equipped_trinkets: list[str] = field(default_factory=list)  # trinket IDs
@@ -164,8 +160,8 @@ class GameState:
 
     def record_turn_end(self) -> None:
         elapsed_s = int((time.monotonic() - self.turn_start_time) * 1000)
-        self.stats.fastest_turn_ms += min(self.stats.fastest_turn_ms, elapsed_s)
-        self.stats.slowest_turn_ms += max(self.stats.slowest_turn_ms, elapsed_s)
+        self.stats.fastest_turn_ms = min(self.stats.fastest_turn_ms, elapsed_s)
+        self.stats.slowest_turn_ms = max(self.stats.slowest_turn_ms, elapsed_s)
 
     def to_dict(self) -> dict:
         """Serialize for save file. converts enums to strings."""

@@ -81,11 +81,11 @@ class EmotionState:
         self.last_abv = abv
 
         # Interesting drinks raise engagement; weak ones lower it
-        if abv >= 50:
+        if abv >= 0.5:
             self.shift_engagement(+0.08)
-        elif abv >= 30:
+        elif abv >= 0.3:
             self.shift_engagement(+0.03)
-        elif abv < 10:
+        elif abv < 0.1:
             self.shift_engagement(-0.06)
 
     @property

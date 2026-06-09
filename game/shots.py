@@ -1,10 +1,15 @@
 from enum import Enum, auto
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.effects import Effect
 
 real_flavor_tags: list[str] = ["Clean", "Spirit", "Warm", "Agave", "Floral", "Sweet", "Grape", "Bubbly",
                                "Rice", "Subtle", "Fruit", "Anise", "Void", "Herbal", "Grain", "Pure", "Rough", "Light"]
 fictive_flavor_tags: list[str] = ["Demon", "Fire", "Ghost", "Cursed", "Spite", "Clarity", "Wild"]
 sin_flavor_tags: list[str] = ["Pride", "Lust", "Wrath", "Envy", "Sloth", "Greed", "Gluttony", "Fraud", "Treachery"]
 all_flavor_tags: list[str] = real_flavor_tags + fictive_flavor_tags + sin_flavor_tags
+
 
 class Rarity(Enum):
     Common = auto()
@@ -33,7 +38,7 @@ class Alcohol:
                  name: str,
                  abv: float,
                  rarity: Rarity,
-                 effect: None,  # TODO: add effects
+                 effect: Effect | None,  # TODO: add effects
                  flavor_tags: list[str],
                  nina_reaction: dict[str, list[str]] | None = None,  # All nones are placeholders for the moment
                  visibility: Visibility | None = None,
@@ -92,7 +97,7 @@ shot_brandy: Alcohol = Alcohol(
     abv=0.40,
     rarity=Rarity.Common,
     effect=None,
-    flavor_tags=["Fruity", "Warm"],
+    flavor_tags=["Fruit", "Warm"],
 )
 
 """Ale: No effect."""
@@ -485,7 +490,7 @@ shot_treachery: Alcohol = Alcohol(
 )
 
 all_common_alcohols: list[Alcohol] = [shot_vodka, shot_bourbon, shot_tequila, shot_gin, shot_red_wine, shot_champagne,
-                                      shot_rum, shot_schnapps, shot_beer]
+                                      shot_rum, shot_schnapps, shot_beer, shot_ale, shot_brandy, shot_whiskey]
 all_uncommon_alcohols: list[Alcohol] = [shot_sake, shot_jaegermeister, shot_soju, shot_moonshine, shot_shadowmead,
                                         shot_ectofizz, shot_memoria, shot_echo, shot_bittersoul]
 all_rare_alcohols: list[Alcohol] = [shot_absinthe, shot_everclear, shot_hellfire, shot_blooddemon, shot_sprite,
@@ -509,65 +514,6 @@ def flavor_tag_exists(alcohol_list: list[Alcohol]) -> None:
     for flavor_tag in all_alcohol_flavor_tags:
         if flavor_tag not in all_flavor_tags:
             raise ValueError(f"Flavor tag {flavor_tag} not available")
-
-
-# TODO: Make the combos have effect.
-def static_shot_combos(shot1: Alcohol, shot2: Alcohol) -> None:
-    """This function checks the last shot the players (BOTH NINA AND PLAYER) took and compares the flavor tags of both drinks.
-    If they lead to a combo, said combo will be activated.
-    Currently, it doesn't matter if one drink alone already has enough tags to activate the combo,
-    which should be fixed."""
-    flavor_combined = shot1.flavor_tags + shot2.flavor_tags
-
-    # ---- CURSED COMBO ----
-    if "Cursed" in flavor_combined:
-        """Curse destroys any synergies."""
-        ...
-
-    # ---- SUGAR RUSH ----
-    elif flavor_combined.count("Sweet") == 2:
-        """Freezes corruption for two rounds"""
-        ...
-
-    # ---- HELLMOUTH ----
-    elif ("Demon", "Void") in flavor_combined:
-        """Damages Nina for an additional 0.02 BAC no matter what"""
-        ...
-
-    # ---- ALCHEMIST'S ERROR ----
-    elif ("Fire", "Herbal") in flavor_combined:
-        """Both players gain the same BAC from this rounds shots"""
-        ...
-
-    # ---- PASSING THROUGH ----
-    elif ("Ghost", "Pure") in flavor_combined:
-        """Your BAC gain is halved"""
-        ...
-
-    # ---- LIQUID SPITE ----
-    elif ("Spite", "Spirit") in flavor_combined:
-        """Gain 3 Spite"""
-        ...
-
-    # ---- SLOW BURN ----
-    elif flavor_combined.count("Warm") == 2:
-        """BAC gains delayed by 1 round for both players"""
-        ...
-
-    # ---- EVENT HORIZON ----
-    elif flavor_combined.count("Void") == 2:
-        """All shot contents are hidden and cannot be revelead by an means"""
-        ...
-
-    # ---- NINA'S SPECIAL ----
-    elif flavor_combined.count("Demon") == 2:
-        """New round of drinks, no breathing room. Extra bonus round"""
-        ...
-
-    # ---- ECLIPSE ----
-    elif ("Light", "Void") in flavor_combined:
-        """Corruption gets halved, but one card gets destroyed"""
-        ...
 
 
 if __name__ == "__main__":

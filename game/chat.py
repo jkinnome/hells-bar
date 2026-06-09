@@ -6,8 +6,9 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.state import GameState
+    from game.ninoula.emotion import EmotionState
     from game.ninoula.ninoula import Ninoula, Mood
+    from game.state import GameState
 
 
 class ChatAction(Enum):
@@ -50,7 +51,7 @@ class ChatSystem:
         self.token_available = True
 
     @staticmethod
-    def get_options(state: "GameState", nina: "Ninoula", window: str) -> list[ChatOption]:
+    def get_options(e: "EmotionState", nina: "Ninoula", window: str) -> list[ChatOption]:
         """
         Returns 3-5 chat options appropriate to the current window and state.
         windows: "during_turn" | "after_picks" | "breath_phase"
@@ -72,7 +73,7 @@ class ChatSystem:
                 "Shift Nina toward Irritated. Risky if she's already tense."
             ))
 
-        if state.affection < 0.8:
+        if e.affection < 0.8:
             options.append(ChatOption(
                 ChatAction.CHARM,
                 "\"You know, you're not what I expected.\"",
@@ -105,7 +106,7 @@ class ChatSystem:
 
         return options[:5]  # caps at 5
 
-    def resolve(self, action: ChatAction, state: "GameState",
+    def resolve(self, action: ChatAction, e: "EmotionState", state: "GameState",
                 nina: "Ninoula", targel_glass_idx: int = 0) -> ChatResult:
         """Process a chat action. Returns a result including Nina's response."""
         self.token_available = False
@@ -117,9 +118,9 @@ class ChatSystem:
             case ChatAction.TAUNT:
                 return self._resolve_taunt(nina)
             case ChatAction.CHARM:
-                return self._resolve_charm(state, nina)
+                return self._resolve_charm(e, nina)
             case ChatAction.CONFESS:
-                return self._resolve_confess(state, nina)
+                return self._resolve_confess(e, nina)
             case ChatAction.BARGAIN:
                 return self._resolve_bargain(nina)
             case ChatAction.SILENCE:
@@ -178,10 +179,10 @@ class ChatSystem:
         )
 
     @staticmethod
-    def _resolve_charm(state, nina) -> ChatResult:
+    def _resolve_charm(e, nina) -> ChatResult:
         affection_gain = 0.12 if nina.bac > 0.15 else 0.07
         response: str = "Sure bro"
-        if state.affection >= 0.7:
+        if e.affection >= 0.7:
             # Already affectionate
             response: str = "Love you too pookie bear"
             affection_gain *= 0.5  # diminishing returns
@@ -220,12 +221,12 @@ class ChatSystem:
         )
 
     @staticmethod
-    def _resolve_confess(state, nina) -> ChatResult:
-        affection_gain = 0.9
+    def _resolve_confess(e, nina) -> ChatResult:
+        affection_gain = 0.09
 
         response: str = "okay chud"
 
-        if nina.mood == Mood.TIPSY and state.affection >= 0.5:
+        if nina.mood == Mood.TIPSY and e.affection >= 0.5:
             # soft response
             response: str = "my bad chud"
             affection_gain *= 2
