@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from game.ninoula.emotion import EmotionState
     from game.ninoula.ninoula import Ninoula, Mood
     from game.state import GameState
+    from game.shots import shot_water
 
 
 class ChatAction(Enum):
@@ -36,6 +37,7 @@ class ChatResult:
     tension_delta: float = 0.0
     info_revealed: str | None = None  # e.g. "Shot 2 is FOR SURE Bourbon bro TRUST"
     nina_mood_shifted: Mood | None = None
+    offered_object: object | None = None
 
 
 class ChatSystem:
@@ -101,8 +103,8 @@ class ChatSystem:
         options.append(ChatOption(
             ChatAction.TALK,
             "\"Nice weather we're having, right?\"",
-            "Create a bit of small talk with Nina. Break the Ice, if you will."
-        ))
+            "Create a bit of small talk with Nina. Break the ice, if you will."
+        ))  # TODO: add functionality to this
 
         return options[:5]  # caps at 5
 
@@ -225,13 +227,20 @@ class ChatSystem:
         affection_gain = 0.09
 
         response: str = "okay chud"
+        offer = None
 
         if nina.mood == Mood.TIPSY and e.affection >= 0.5:
             # soft response
             response: str = "my bad chud"
             affection_gain *= 2
 
-        return ChatResult(nina_response=response, affection_delta=affection_gain)
+            if e.affection >= 0.8:
+                # get offered water
+                # TODO: make this like once a run event and actually offer water
+                response += ", have some water chud"
+                offer = shot_water
+
+        return ChatResult(nina_response=response, affection_delta=affection_gain, offered_object=offer)
 
     @staticmethod
     def _resolve_silence() -> ChatResult:
