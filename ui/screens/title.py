@@ -1,7 +1,7 @@
-from textual.screen import Screen
-from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Static, Button
+from textual.app import ComposeResult
 from textual.events import Key
+from textual.screen import Screen
+from textual.widgets import Static
 
 
 class TitleScreen(Screen):

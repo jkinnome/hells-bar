@@ -24,8 +24,8 @@ GONE           ->   GONE             (normal)
 
 # game/ninoula/emotion.py
 from __future__ import annotations
-from dataclasses import dataclass, field
-import random
+
+from dataclasses import dataclass
 
 
 @dataclass

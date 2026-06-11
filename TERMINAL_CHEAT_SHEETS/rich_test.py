@@ -20,5 +20,4 @@ t.append("hello", style="bold blue")  # programmatic text
 
 console.print("[bold bright_yellow on dark_red] ⚠ HIGH BLOOD ALCOHOL ⚠ [/bold bright_yellow on dark_red]")
 
-
 input()

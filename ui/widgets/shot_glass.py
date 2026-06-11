@@ -1,10 +1,8 @@
-from textual.app import App, ComposeResult
-from textual.widgets import Static, Label, ProgressBar, RichLog
-from textual.widget import Widget
-from textual.reactive import reactive
-from rich.text import Text
-import random
 from typing import TYPE_CHECKING
+
+from rich.text import Text
+from textual.reactive import reactive
+from textual.widget import Widget
 
 if TYPE_CHECKING:
     from game.shots import Alcohol
@@ -44,7 +42,6 @@ class SinGlass(ShotGlass):
         self.set_interval(0.4, self._flicker)
 
     def _flicker(self) -> None:
-        import random
         self.toggle_class("sin-flicker")
 
     def render(self) -> Text:

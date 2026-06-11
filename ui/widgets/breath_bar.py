@@ -1,7 +1,6 @@
-from textual.widget import Widget
-from textual.reactive import reactive
 from rich.text import Text
-import time
+from textual.reactive import reactive
+from textual.widget import Widget
 
 
 class BreathPhaseBar(Widget):

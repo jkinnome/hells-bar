@@ -1,20 +1,8 @@
 # --- Textual ---
 
-from textual.app import App, ComposeResult
-
-from textual.screen import Screen
-
-from textual.widget import Widget
-
-from textual.widgets import Static, Label, Button, ProgressBar, RichLog
-
-from textual.containers import Horizontal, Vertical, Container
-
-from textual.reactive import reactive
-
-from textual.message import Message
-
 from textual import work
+from textual.reactive import reactive
+from textual.widgets import Label
 
 # App lifecycle
 

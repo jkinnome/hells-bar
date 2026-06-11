@@ -1,7 +1,6 @@
-from textual.widget import Widget
-from textual.reactive import reactive
-from rich.text import Text
 from rich.panel import Panel
+from textual.reactive import reactive
+from textual.widget import Widget
 
 
 class BACMeter(Widget):
