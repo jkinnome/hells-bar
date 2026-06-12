@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from game.events import
+from game.events import GameEvent
 from game.trinkets.base import Trinket, TrinketEffect, TrinketRarity
 
 ...

@@ -1,78 +1,62 @@
-"""
-EVENTBUS
-PART OF JK'S CUSTOM LIBRARIES
+from __future__ import annotations
 
-This library exists to easily create events.
-Created by JK
-Copyright 2026
-"""
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import TYPE_CHECKING
 
-from collections import defaultdict, deque
-from typing import Callable
+if TYPE_CHECKING:
+    pass
 
 
-class EventBus:
-    """
-    Publish/subscribe event system. Decouples scenes and systems.
+class EventType(Enum):
+    # --- Milestone Events (once per run) ---
+    MILESTONE_BAC_15 = auto()  # player hits 0.15 BAC
+    MILESTONE_BAC_25 = auto()  # player hits 0.25
+    MILESTONE_BAC_35 = auto()  # player hits 0.35
+    MILESTONE_BAC_45 = auto()  # player hits 0.45 (pass out on normal difficulty)
+    MILESTONE_ROUND_5 = auto()  # survived 5 rounds
+    MILESTONE_ROUND_10 = auto()  # survived 10 rounds
+    MILESTONE_SPITE_10 = auto()  # accumulated 10 spite
+    MILESTONE_FIRST_COMBO = auto()  # first combo triggered
+    MILESTONE_SIN_SEEN = auto()  # Sin glass on table
+    MILESTONE_NINA_TIPSY = auto()  # Nina hits 0.20 BAC for first time
 
-    Usage:
-        bus = EventBus()
+    # --- Atmospheric Events (random and can reoccur) ---
+    ATMOS_GLASS_FALLS = auto()
+    ATMOS_MUSIC_SKIPS = auto()
+    ATMOS_POWER_FLICKER = auto()
+    ATMOS_DISTANT_SOUND = auto()
+    ATMOS_NINA_CHECKS_NAILS = auto()
+    ATMOS_NINA_REFILLS = auto()
+    ATMOS_NINA_YAWNS = auto()
 
-        def on_death(data):
-            print(f"Player died: {data['cause']}")
+    # --- Reactive Events (action responses/run actions) ---
+    REACT_NINA_TAUNT = auto()
+    REACT_PLAYER_FAST = auto()
+    REACT_PLAYER_LOW_STREAK = auto()
+    REACT_PLAYER_HIGH_ABV = auto()
+    REACT_NINA_BLUNDER = auto()
+    REACT_COMBO_TRIGGER = auto()
+    REACT_SIN_GLASS_PICKER = auto()
+    REACT_CARD_PLAYED = auto()
+    REACT_TRICK_CAUGHT = auto()
+    REACT_SILENCE_CHAT = auto()
 
-        bus.subscribe("player_died", on_death)
-        bus.emit("player_died", {"cause": "fall"})
-        bus.unsubscribe("player_died", on_death)
-    """
+    # --- Unique Events (once per save file) ---
+    # -- First Time Events --
+    FIRST_WIN = auto()
+    FIRST_LOSS = auto()
+    FIRST_SIN_DRINK = auto()
+    FIRST_TRIPLE_COMBO = auto()  # 3 combos in one round
+    FIRST_LUCID_FLASH = auto()
+    FIRST_TABLE_FLIP = auto()
+    # -- Secret Events --
+    SECRET_CONFESSION_ROOM = auto()
 
-    def __init__(self) -> None:
-        self._handlers: dict[str, list[Callable]] = defaultdict(list)
-        self._queue: deque[tuple[str, dict]] = deque()
+    # --- Nina Events (fired by Nina herself ---
 
-    def subscribe(self, event: str, handler: Callable) -> None:
-        """Register a handler for an event."""
-        if handler not in self._handlers[event]:
-            self._handlers[event].append(handler)
 
-    def unsubscribe(self, event: str, handler: Callable) -> None:
-        """Remove a handler. Silent if not registered."""
-        try:
-            self._handlers[event].remove(handler)
-        except ValueError:
-            pass
-
-    def emit(self, event: str, data: dict | None = None) -> None:
-        """
-        Fire an event. All subscribed handlers are called in order.
-        Uses a copy of the handler list so handlers can safely
-        unsubscribe during emit.
-        """
-        payload = data or {}
-        specific = list(self._handlers.get(event, []))
-        wildcards = list(self._handlers.get('*', []))
-        for handler in specific:
-            handler(payload)
-        for handler in wildcards:
-            handler({**payload, '_event': event})
-
-    def clear(self, event: str | None = None) -> None:
-        """Remove all handlers for an event, or all events if none given."""
-        if event:
-            self._handlers.pop(event, None)
-        else:
-            self._handlers.clear()
-
-    def listeners(self, event: str) -> int:
-        """Returns the number of handlers subscribed to an event."""
-        return len(self._handlers.get(event, []))
-
-    def queue(self, event: str, data: dict | None = None) -> None:
-        """Enqueue an event to be fired later by flush()."""
-        self._queue.append((event, data or {}))
-
-    def flush(self) -> None:
-        """Fire all queued events in order. Call once per game loop tick."""
-        while self._queue:
-            event, data = self._queue.popleft()
-            self.emit(event, data)
+@dataclass
+class GameEvent:
+    type: EventType
+    payload: dict  # context data (e.g. {"abv": shot.abv, "shot_name": shot.name}

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from game.state import GameState
     from game.ninoula.ninoula import Ninoula
-    from game.events import EventBus
+    from game.eventbus import GameEvent
 
 
 class TrinketRarity(Enum):
@@ -111,7 +111,7 @@ class Trinket(ABC):
         """Return the modified BAC gain."""
         return gain
 
-    def on_event(self, event: "EventBus",
+    def on_event(self, event: "GameEvent",
                  state: "GameState",
                  nina: "Ninoula") -> Optional[TrinketEffect]:
         return None

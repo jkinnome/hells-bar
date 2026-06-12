@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, Optional
 
-from game.events import EventBus
+from game.eventbus import EventType, EventBus
 from game.trinkets.base import TrinketEffect, Trinket
 
 if TYPE_CHECKING:
