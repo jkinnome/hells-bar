@@ -9,9 +9,11 @@ if TYPE_CHECKING:
     from game.state import GameState
     from game.ninoula.ninoula import Ninoula
     from game.eventbus import GameEvent
+    from game.shots import Alcohol
 
 
 class TrinketRarity(Enum):
+    META = auto()
     COMMON = auto()
     UNCOMMON = auto()
     RARE = auto()
@@ -92,11 +94,11 @@ class Trinket(ABC):
                        nina: "Ninoula") -> Optional[TrinketEffect]:
         return None
 
-    def on_player_drink(self, abv: float, shot: dict,
-                        state: "GameState") -> Optional[TrinketEffect]:
+    def on_player_drink(self, shot: Alcohol,
+                        state: "GameState", nina: "Ninoula") -> Optional[TrinketEffect]:
         return None
 
-    def on_nina_drink(self, abv: float, shot: dict,
+    def on_nina_drink(self, shot: Alcohol,
                       state: "GameState",
                       nina: "Ninoula") -> Optional[TrinketEffect]:
         return None

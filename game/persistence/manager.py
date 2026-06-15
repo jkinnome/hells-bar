@@ -53,4 +53,5 @@ class PersistenceManager:
         raw = self._data.get("active_run")
         if raw is None:
             return None
+        # noinspection PyTypeChecker
         return GameState.from_dict(raw)
