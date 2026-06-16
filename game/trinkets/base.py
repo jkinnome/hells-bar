@@ -118,8 +118,11 @@ class Trinket(ABC):
                  nina: "Ninoula") -> Optional[TrinketEffect]:
         return None
 
+    def on_phase(self, state: "GameState", nina: "Ninoula") -> Optional[TrinketEffect]:
+        return None
+
     def on_run_end(self, state: "GameState") -> None:
-        """Called when run ends. Relics override this to burn themselves."""
+        """Called when run ends."""
         pass
 
     def to_dict(self) -> dict:
