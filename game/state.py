@@ -6,6 +6,9 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from typing import Optional, TYPE_CHECKING
 
+from game.eventbus import EventBus
+from game.trinkets.manager import TrinketManager
+
 if TYPE_CHECKING:
     from game.shots import Alcohol
 
@@ -17,6 +20,14 @@ class RunOutcome(Enum):
     MUTUAL_DRAW = auto()  # possible via Blackout Dagger card
     ABANDONED = auto()
 
+
+class RoundPhase(Enum):
+    INTRO = auto()
+    PLAYER_PICK = auto()
+    NINA_PICK = auto()
+    BREATH = auto()
+    DRINK = auto()
+    OTHER = auto()
 
 class Difficulty(Enum):
     FORGIVING = auto()
@@ -81,15 +92,21 @@ class GameState:
     spite: int = 0
     round_number: int = 1
     outcome: RunOutcome = RunOutcome.IN_PROGRESS
+    phase: RoundPhase = RoundPhase.INTRO
+    _corruption_multiplier = 1.0
 
     # ---- Difficulty config ----
     max_bac: float = 0.4
     patience_seconds: float = 8.0
     corruption_rate: float = 1.0
 
+    # ---- EventBus ----
+    bus: EventBus = EventBus()
+
     # ---- Cards & Trinkets ----
     hand: list[str] = field(default_factory=list)  # cards IDs
     equipped_trinkets: list[str] = field(default_factory=list)  # trinket IDs
+    trinkets: TrinketManager = TrinketManager(bus)
 
     # ---- Round state ----
     current_shots: list[Alcohol] = field(default_factory=list)
@@ -130,7 +147,9 @@ class GameState:
     def player_drink(self, shot: Alcohol) -> None:
         gain = shot.abv * 0.005 * self.corruption_rate
         self.player_bac = min(self.player_bac + gain, self.max_bac)
-        self.corruption = min(self.corruption + (shot.abv * 0.15) * self.corruption_rate, 1.0)
+        self.corruption = min(self.corruption + (shot.abv * 0.15) *
+                              self.corruption_rate * getattr(self, "_corruption_multiplier", 1.0), 1.0)
+        self._corruption_multiplier = 1.0
 
         self.stats.shots_drunk += 1
         self.stats.total_bac_consumed += gain
@@ -152,16 +171,17 @@ class GameState:
 
     def spend_spite(self, amount: int) -> bool:
         """Spends spite based on amount, returns a bool depending on success."""
-        if self.spite < amount:
+        actual = self.trinkets.on_spite_spend(amount, self)
+        if self.spite < actual:
             return False
-        self.spite -= amount
-        self.stats.spite_spent += amount
+        self.spite -= actual
+        self.stats.spite_spent += actual
         return True
 
     def record_turn_end(self) -> None:
-        elapsed_s = int((time.monotonic() - self.turn_start_time) * 1000)
-        self.stats.fastest_turn_ms = min(self.stats.fastest_turn_ms, elapsed_s)
-        self.stats.slowest_turn_ms = max(self.stats.slowest_turn_ms, elapsed_s)
+        elapsed_ms = int((time.monotonic() - self.turn_start_time) * 1000)
+        self.stats.fastest_turn_ms = min(self.stats.fastest_turn_ms, elapsed_ms)
+        self.stats.slowest_turn_ms = max(self.stats.slowest_turn_ms, elapsed_ms)
 
     def to_dict(self) -> dict:
         """Serialize for save file. converts enums to strings."""
