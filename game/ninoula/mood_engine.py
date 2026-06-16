@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
+from game.state import GameState
+from game.trinkets.manager import TrinketManager
+
 if TYPE_CHECKING:
     from game.ninoula.emotion import EmotionState
 
@@ -73,6 +76,7 @@ class MoodEngine:
         self._current: MoodState = MoodState(Mood.SMUG, changed=False)
         self._target: Mood = Mood.SMUG
         self._turns_at_target: int = 0
+        self._trinket_mgr: TrinketManager = GameState.trinkets
 
     @property
     def current(self) -> MoodState:
@@ -159,37 +163,38 @@ class MoodEngine:
         # Sober and engaged = SMUG (various substates)
         return Mood.SMUG
 
-    @staticmethod
-    def _compute_sub(base: Mood, e: "EmotionState") -> (MoodGone | MoodManic | MoodTipsy |
-                                                        MoodSmug | MoodIrritated | None):
+    def _compute_sub(self, base: Mood, e: "EmotionState") -> (MoodGone | MoodManic | MoodTipsy |
+                                                              MoodSmug | MoodIrritated | None):
         """Compute substate from base mood and emotion variables."""
-        if base == Mood.SMUG:
-            if e.engagement < 0.25:
-                return MoodSmug.BORED
-            if e.respect > 0.65 and e.engagement > 0.50:
-                return MoodSmug.IMPRESSED
-            return None
+        match base:
+            case Mood.SMUG:
+                if e.engagement < 0.25 and not self._trinket_mgr.has("static_coat"):
+                    return MoodSmug.BORED
+                if e.respect > 0.65 and e.engagement > 0.50:
+                    return MoodSmug.IMPRESSED
+                return None
 
-        if base == Mood.MANIC:
-            if e.tension > 0.60:
-                return MoodManic.DESTRUCTIVE
-            return MoodManic.JOYFUL
+            case Mood.MANIC:
+                if e.tension > 0.60:
+                    return MoodManic.DESTRUCTIVE
+                return MoodManic.JOYFUL
 
-        if base == Mood.TIPSY:
-            if e.bac > 0.32:
-                return MoodTipsy.SLOPPY
-            if e.affection > 0.52 and e.mask_strength < 0.50:
-                return MoodTipsy.SOFT  # mask down, affection present, she's genuine
-            return None
+            case Mood.TIPSY:
+                if e.affection > 0.2 and e.mask_strength < 0.50:
+                    return MoodTipsy.SOFT  # mask down, affection present, she's genuine
+                elif e.bac > 0.2:
+                    return MoodTipsy.SLOPPY
+                return None
 
-        if base == Mood.GONE:
-            if e.tension > 0.40:
-                return MoodGone.STUBBORN
-            return MoodGone.SURRENDERED
+            case Mood.GONE:
+                if e.tension > 0.40:
+                    return MoodGone.STUBBORN
+                return MoodGone.SURRENDERED
 
-        if base == Mood.IRRITATED:
-            if e.affection > 0.65:
-                return MoodIrritated.POUTY  # a bit more cute and pouty if she likes you
-            return MoodIrritated.PISSED
+            case Mood.IRRITATED:
+                if e.affection > 0.65:
+                    return MoodIrritated.POUTY  # a bit more cute and pouty if she likes you
+                return MoodIrritated.PISSED
 
-        return None
+            case _:
+                raise ValueError(f"This Mood does not exist: {base}")
