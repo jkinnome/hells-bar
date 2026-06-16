@@ -3,13 +3,14 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
-from game.events import EventType
-from game.trinkets.base import Trinket, TrinketEffect, TrinketRarity
-
+from game.eventbus import EventBus
+from game.events import EventType, GameEvent
+from game.trinkets.base import Trinket, TrinketEffect, TrinketRarity, SlotWeight
+from game.persistence.stats import AllTimeStats
 ...
 
 if TYPE_CHECKING:
-    from game.state import GameState
+    from game.state import GameState, RoundPhase
 
 
 # Passive Trinkets
@@ -212,8 +213,10 @@ class SpiteVial(Trinket):
     mechanical = "30% chance Spite isn't used when using an action involving Spite."
     rarity = TrinketRarity.RARE
 
-    # in GameState.spend_spite() if random() > 0.3, use the spite.
-
+    def on_spite_spend(self, amount, state):
+        if random.random() > 0.3:
+            return TrinketEffect(spite_flat=amount)
+        return None
 
 class HouseRules(Trinket):
     id = "house_rules"
@@ -249,14 +252,88 @@ class CrackedMirror(Trinket):
     id = "cracked_mirror"
     name = "Cracked Mirror"
     description = "After all this, it's still you."
-    mechanical = "Corruption display is shown 20% higher, but is actually 10% lower."
+    mechanical = "Corruption display is shown 20% higher, but your ABV is 10% lower."
     rarity = TrinketRarity.CURSED
 
-    # CorruptableLabel reads state.corruption * 1.2 for display. Actual corruption is multiplied by 0.9 before storing
+    # CorruptableLabel reads state.corruption * 1.2 for display.
+    def on_player_drink(self, shot, state, nina):
+        return TrinketEffect(bac_multiplier=0.9)
 
 
+class BorrowedLuck(Trinket):
+    id = "borrowed_luck"
+    name = "Borrowed Luck"
+    description = "You're gonna give this back, right?"
+    mechanical = (
+        "Once per run you can re-roll a glass' contents and it will become a random shot from the common pool. "
+        "On the following turn one random card will be disabled.")
+    rarity = TrinketRarity.CURSED
+    max_charges = 1
+
+    def on_round_start(self, state, nina):
+        ...
+        # add a borrow option in pick phase which replaces a shot with a random one from the common pool
+        # when used, this uses up the charge and makes borrow not appear anymore
 
 # --- Relics ---
+class NinasCoaster(Trinket):
+    id = "ninas_coaster"
+    name = "Ninoula's Coaster"
+    description = "She left this on your side of the table once."
+    mechanical = ("Affection starts at 0.5 instead of 0.1 this run. "
+                  "Her opening line is drawn from a seperate affectionate pool")
+    rarity = TrinketRarity.RELIC
+    slot_weight = SlotWeight.HEAVY
+
+    def on_run_start(self, state, nina):
+        nina.emotion.affection = 0.5
+        # then override the intro dialogue pool to the affectionate one
+
+
+class NinthGlass(Trinket):
+    id = "ninth_glass"
+    name = "The 9th Glass"
+    description = "???????????"
+    mechanical = "Once per run you can declare the 9th Glass as drunk. Nina's BAC advances by 0.05 and the round ends."
+    rarity = TrinketRarity.RELIC
+    slot_weight = SlotWeight.HEAVY
+    max_charges = 1
+
+    def on_round_start(self, state, nina):
+        nina.drink(35)
+
+        # something like
+        # EventBus.emit(event=GameEvent(type=EventType.REACT_NINA_BLUNDER, payload={"ninth_glass": True}))
+        ...
+        # add a 9 binding that skips Nina's pick
+
+
+class DantesBookmark(Trinket):
+    id = "dantes_bookmark"
+    name = "Dante's Bookmark"
+    description = "Found in a book left on the bar."
+    mechanical = "When a Sin drink appears on the table, you can see all it's contents."
+    rarity = TrinketRarity.RELIC
+    slot_weight = SlotWeight.HEAVY
+
+    def on_round_start(self, state, nina):
+        ...
+        # if shot.rarity == Rarity.SIN then reveal all info through the renderer
+
+
+class BrokenHourglass(Trinket):
+    id = "broken_hourglass"
+    name = "Broken Hourglass"
+    description = "The sand doesn't fall right."
+    mechanical = "Once per run, during any Breath Phase, you can extend it by 60 seconds."
+    rarity = TrinketRarity.RELIC
+    slot_weight = SlotWeight.HEAVY
+    max_charges = 1
+
+    def on_phase(self, state, nina):
+        if state.phase == RoundPhase.BREATH:
+            ...
+            # Freeze BreathPhase timer when player presses H. then do something like _frozen = true and self.set_timer(60, self._unfreeze)
 
 # --- Secret Trinkets ---
 class MemoryFragment(Trinket):
@@ -269,12 +346,71 @@ class MemoryFragment(Trinket):
     # Expose to UI via an extra function, something like state.trinkets.get_memory_log()
 
 
+class RecipeCard(Trinket):
+    id = "recipe_card"
+    name = "Grandmother's Recipe Card"
+    description = "The handwriting is very old. You can't read it despite your best efforts."
+    mechanical = ""  # TODO: add a mechanic to this
+    rarity = TrinketRarity.SECRET
+
+
+class NinasNumber(Trinket):
+    id = "ninas_number"
+    name = "Ninoula's Number"
+    description = "Not a phone number. You don't know what it is though."
+    mechanical = "A few of Nina's Tells will always be visible "
+    rarity = TrinketRarity.SECRET
+
+    # override TellGenerator if tell.is_known is true.
+
+
+class NinasCoin(Trinket):
+    id = "ninas_coin"
+    name = "Ninoula's Coin"
+    description = "Looks ancient."
+    mechanical = "Start every run with 0.05 extra affection."
+    rarity = TrinketRarity.SECRET
+
+    def on_run_start(self, state, nina):
+        nina.affection += 0.05
+
+
+class LastTab(Trinket):
+    id = "last_tab"
+    name = "The Last Tab"
+    description = "Someone left without paying."
+    mechanical = "Start a run with 1 Spite per previous completed. Capped at 5."
+    rarity = TrinketRarity.SECRET
+
+    def on_run_start(self, state, nina):
+        state.gain_spite(min(AllTimeStats.total_runs, 5))
+
+
+class VoidResidue(Trinket):
+    id = "void_residue"
+    name = "Void Residue"
+    description = "A dark smear on your hand."
+    mechanical = "Once per run: force Nina to repick a glass. Raises Tension by 15% and Engagement by 10%."
+    rarity = TrinketRarity.SECRET
+    max_charges = 1
+
+    def on_nina_drink(self, shot, state, nina):
+        nina.tension += 0.15
+        nina.engagement += 0.1
+        # During Nina's animation add Void Pick binding which cancels her first pick and forces her a new one
+
+
+
 # --- Registry ---
 
 ALL_TRINKETS: dict[str, type[Trinket]] = {
     cls.id: cls for cls in [
         IronLiver, HollowLeg, CrackedCoaster, SilverTongue, DemonsReceipt,
-        StaticCoat, GrudgeStone, PainkillerTin,
+        StaticCoat, GrudgeStone, PainkillerTin, WornCompass, TarnishedLocket,
+        AnotherStraw, IronRing, ChippedGlass, LuckyHorseshoe, CrowsEye,
+        SpiteVial, MemoryFragment, HouseRules, HeavyGlass, CrackedMirror,
+        BorrowedLuck, NinasCoaster, NinthGlass, DantesBookmark, BrokenHourglass,
+        RecipeCard, NinasNumber, NinasCoin, LastTab, VoidResidue,
     ]
 }
 
