@@ -92,3 +92,4 @@ if __name__ == '__main__':
     print(GLITCH_TIER_2)
     print(GLITCH_TIER_3)
     print(GLITCH_TIER_4)
+    input("Press enter to exit...")
