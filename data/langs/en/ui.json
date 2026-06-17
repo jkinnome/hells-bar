@@ -1,0 +1,15 @@
+{
+  "title": "Hell's Bar",
+  "nina": {
+    "full": "Ninoula",
+    "short": "Nina"
+  },
+  "phases": {
+    "breath": "BREATH PHASE...",
+    "pick": {
+      "player": "{player_name}'S PICK...",
+      "nina": "NINOULA'S PICK..."
+    },
+    "drink": "DRINK TIME!"
+  }
+}
