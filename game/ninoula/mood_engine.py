@@ -37,7 +37,7 @@ class MoodGone(Enum):
 
 
 class Mood(Enum):
-    SMUG = MoodSmug  # default , she's winning
+    SMUG = MoodSmug  # default, she's winning
     MANIC = MoodManic  # she got a bad shot, or is very drunk
     IRRITATED = MoodIrritated  # player pulled a trick on her
     TIPSY = MoodTipsy  # moderately drunk, loosening up
@@ -56,11 +56,14 @@ class Mood(Enum):
         raise AttributeError(f"{self!r} has no attribute {name!r}")
 
 
+SubMood = MoodSmug | MoodManic | MoodTipsy | MoodIrritated | MoodGone | None
+
+
 @dataclass
 class MoodState:
     base: Mood
     changed: bool
-    sub: MoodGone | MoodManic | MoodTipsy | MoodSmug | MoodIrritated | None = None
+    sub: SubMood = None
 
 
 class MoodEngine:
