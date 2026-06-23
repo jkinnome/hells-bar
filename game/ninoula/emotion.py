@@ -41,12 +41,19 @@ class EmotionState:
     # Core
     bac: float = 0.0  # Blood alcohol content [0, 0.5]
 
+    # Persistent cross-run relationship state
+    adoration: float = 0.0  # <- affection
+    grudge: float = 0.0  # <- tension
+    fascination: float = 0.0  # <- engagement
+    admiration: float = 0.0  # <- respect
+    wariness: float = 0.0  # <- suspicion (clean slate every run, but she still watches out for you)
+
     # Relationship axes
     affection: float = 0.10  # Slight baseline warmth to start
     tension: float = 0.05  # Very slight baseline wariness
 
     # Run-state axes
-    engagement: float = 0.50  # Neutral to start; rises quickly if run is interesting
+    engagement: float = 0.50  # Neutral to start, rises quickly if run is interesting
     respect: float = 0.20  # Slight baseline disrespect (you're a mortal, after all)
     suspicion: float = 0.00  # Clean slate every run
 
