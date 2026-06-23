@@ -489,23 +489,30 @@ shot_treachery: Alcohol = Alcohol(
     flavor_tags=["Treachery", "Void", "Cursed", "Anise"],
 )
 
-all_common_alcohols: list[Alcohol] = [shot_vodka, shot_bourbon, shot_tequila, shot_gin, shot_red_wine, shot_champagne,
-                                      shot_rum, shot_schnapps, shot_beer, shot_ale, shot_brandy, shot_whiskey]
-all_uncommon_alcohols: list[Alcohol] = [shot_sake, shot_jaegermeister, shot_soju, shot_moonshine, shot_shadowmead,
-                                        shot_ectofizz, shot_memoria, shot_echo, shot_bittersoul]
-all_rare_alcohols: list[Alcohol] = [shot_absinthe, shot_everclear, shot_hellfire, shot_blooddemon, shot_sprite,
-                                    shot_starna, shot_idunn, shot_zeus, shot_grandmother]
-all_cursed_alcohols: list[Alcohol] = [shot_styx, shot_void, shot_siopi]
-all_sin_alcohols: list[Alcohol] = [shot_pride, shot_greed, shot_lust, shot_gluttony, shot_sloth, shot_fraud, shot_envy,
-                                   shot_wrath, shot_caina, shot_treachery]
-all_special_alcohols: list[Alcohol] = [shot_water]
-all_alcohols: list[Alcohol] = (all_common_alcohols +
-                               all_uncommon_alcohols +
-                               all_rare_alcohols +
-                               all_cursed_alcohols +
-                               all_sin_alcohols +
-                               all_special_alcohols)
+all_alcohols: list[Alcohol] = [shot_vodka, shot_bourbon, shot_tequila, shot_gin, shot_red_wine, shot_champagne,
+                               shot_rum,
+                               shot_schnapps, shot_beer, shot_ale, shot_brandy, shot_whiskey, shot_sake,
+                               shot_jaegermeister,
+                               shot_soju, shot_moonshine, shot_shadowmead, shot_ectofizz, shot_memoria, shot_echo,
+                               shot_bittersoul,
+                               shot_absinthe, shot_everclear, shot_hellfire, shot_blooddemon, shot_sprite, shot_starna,
+                               shot_idunn,
+                               shot_zeus, shot_grandmother, shot_styx, shot_void, shot_siopi, shot_pride, shot_greed,
+                               shot_lust,
+                               shot_gluttony, shot_sloth, shot_fraud, shot_envy, shot_wrath, shot_caina, shot_treachery,
+                               shot_water]
 
+
+def build_alcohol_list(r: Rarity) -> list[Alcohol]:
+    return [s for s in all_alcohols if s.rarity == r]
+
+
+all_common_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Common)
+all_uncommon_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Uncommon)
+all_rare_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Rare)
+all_cursed_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Cursed)
+all_sin_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Sin)
+all_special_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Special)
 
 def flavor_tag_exists(alcohol_list: list[Alcohol]) -> None:
     """Checks all alcohols to see if the flavor tags match with what's available. If not, raises a ValueError."""
