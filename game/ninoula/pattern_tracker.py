@@ -1,7 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from collections import deque
+
+import random
 import statistics
+from collections import deque
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -58,4 +60,90 @@ class PatternTracker:
         else:
             self._consecutive_low = 0
 
-        ...
+    # --- Pattern Queries ---
+
+    @property
+    def preferred_position(self) -> int | None:
+        """
+        Which glass position (0/1/2) the player picks most.
+        Returns None if no clear preference (all around within 1 pick of each other).
+        """
+        if self._total_turns < 3:
+            return None
+        counts: dict[int, int] = self._position_count
+        # noinspection PyTypeChecker
+        top = max(counts, key=counts.get)
+        second = sorted(counts.values())[-2]
+        if counts[top] - second >= 2:  # preference
+            return top
+        return None
+
+    @property
+    def is_decisive(self) -> bool:
+        """True if player consistently picks quickly (around 3 seconds)"""
+        if len(self._history) < 2:
+            return False
+        times = [r.decision_ms for r in self._history]
+        return statistics.mean(times) < 3000
+
+    @property
+    def is_cautious(self) -> bool:
+        """current or historical low-ABV streak >= 3."""
+        return self._consecutive_low >= 3 or self._max_low_streak >= 3
+
+    @property
+    def is_reckless(self) -> bool:
+        """Consistently picks high-ABV shots regardless of risk."""
+        if len(self._history) < 3:
+            return False
+        recent_abv = [r.alcohol_chosen.abv for r in list(self._history)[-3:]]
+        return all(a >= 38 for a in recent_abv)
+
+    @property
+    def uses_tricks_heavily(self) -> bool:
+        return self._trick_cards_used >= 2
+
+    @property
+    def current_low_streak(self) -> int:
+        return self._consecutive_low
+
+    def predict_player_pick(self, available_positions: list[int]) -> int | None:
+        """
+        Nina's prediction of which glass the player will likely pick.
+        Used to influence her own pick (avoid the glass she thinks you want,
+        or try to predict and react in irritated.)
+
+        Returns a position index or None if no clear prediction.
+        """
+        if not available_positions:
+            return None
+
+        # Preferred position bias
+        pref = self.preferred_position
+        if pref is not None and pref in available_positions:
+            # if player is decisive, they're more predictable
+            confidence = 0.65 if self.is_decisive else 0.45
+            if random.random() < confidence:
+                return pref
+
+        # Catious players avoid the last glass (sin glass)
+        if self.is_cautious and len(available_positions) > 1:
+            non_last = [p for p in available_positions if p != max(available_positions)]
+            if non_last:
+                return non_last[0]
+
+        return None  # no prediction
+
+    def summary_for_nina(self) -> dict:
+        """
+        Structured summary Nina can read for dialogue, tells or mood
+        """
+        return {
+            "decisive": self.is_decisive,
+            "cautious": self.is_cautious,
+            "reckless": self.is_reckless,
+            "preferred_position": self.preferred_position,
+            "tricks_heavy": self.uses_tricks_heavily,
+            "low_streak": self._consecutive_low,
+            "total_turns": self._total_turns,
+        }
