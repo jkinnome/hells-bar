@@ -8,19 +8,54 @@ Created by JK
 Copyright 2026
 """
 
+"""edited for Hell's Bar. Included bars from consolecontroller"""
+
 import importlib.util
 import subprocess
 import sys
 import threading
 from time import sleep
 
-REQUIRED: dict[str, str] = {
-    "rich": "rich",
+DIF_REQUIREMENT: dict[str, str] = {
     "pygame": "pygame-ce",
-    "textual": "textual",
 }
 
-"""edited for Hell's Bar. Included bars from consolecontroller"""
+REQUIREMENTS: dict[str, str] = {}
+
+
+def populate_requirements(requirements: dict[str, str],
+                          dif_requirements: dict[str, str]) -> dict[str, str]:
+    try:
+        with open("requirements.txt", "r") as f:
+            for lines in f.readlines():
+                line = lines.strip()
+                if line:
+                    requirements[line] = line  # populates dict: "rich": "rich"
+        for imp, pip in dif_requirements.items():  # changes dict depending on dif import name
+            if pip in requirements:
+                requirements[imp] = requirements.pop(pip)
+    except FileNotFoundError as e:
+        sys.stderr.write(f"CRITICAL ERROR: {e}\n"
+                         "TRY REINSTALLING REQUIREMENTS.TXT OFF OF THE GITHUB PAGE\n")
+
+    return requirements
+
+
+def change_installation_label(label: str) -> None:
+    sys.stdout.write('\033[1A')  # move 1 up
+    sys.stdout.write('\r')
+    sys.stdout.write('\033[0K')  # clear line
+    sys.stdout.write(f"Installing {label}...")
+    sys.stdout.write('\033[1B')  # move back down
+    sys.stdout.flush()
+
+
+def unrender_label() -> None:
+    sys.stdout.write('\033[1A')
+    sys.stdout.write('\r')
+    sys.stdout.write('\033[0K')  # clear line
+    sys.stdout.flush()
+    # stays in same place afterward
 
 
 class ProgressBar:
@@ -130,9 +165,10 @@ def setup(required: dict[str, str], bar_fill: str = "█", bar_empty: str = "░
 
     sleep(1)
     if missing:
-        print(f"Installing {', '.join(missing)}...")
         bar: ProgressBar = ProgressBar(total=len(missing), fill=bar_fill, empty=bar_empty)
+        bar.render()
         for calls in missing:
+            change_installation_label(calls)
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", calls],
                 stdout=subprocess.DEVNULL,  # hide noisy pip output
@@ -141,6 +177,8 @@ def setup(required: dict[str, str], bar_fill: str = "█", bar_empty: str = "░
             bar.advance()
         sleep(1)
         bar.unrender()
+        unrender_label()
+        print("Installing...")  # empty label
         print("Done.")
     else:
         print("All packages are already installed.")
@@ -152,8 +190,11 @@ def setup(required: dict[str, str], bar_fill: str = "█", bar_empty: str = "░
 
 
 if __name__ == "__main__":
+    REQUIREMENTS = populate_requirements(REQUIREMENTS, DIF_REQUIREMENT)
     sys.stdout.write("\033]2;Hell's Bar: SETUP\007")  # change title
     sys.stdout.write('\033[?25l')  # hide cursor
     sys.stdout.flush()
-    setup(REQUIRED, "♥", "♡")
-    sys.stdout.write('\033[?25h')  # show cursor before exiting
+    try:
+        setup(REQUIREMENTS, "♥", "♡")
+    finally:
+        sys.stdout.write('\033[?25h')  # show cursor before exiting
