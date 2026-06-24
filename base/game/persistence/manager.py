@@ -1,8 +1,6 @@
 import json
-import os
 from pathlib import Path
-from game.state import GameState
-from game.persistence.stats import AllTimeStats
+from base.game.state import GameState
 
 SAVE_DIR = Path.home() / ".hells_bar"
 SAVE_FILE = SAVE_DIR / "save.json"

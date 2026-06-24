@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
+import random
 if TYPE_CHECKING:
-    from game.ninoula.emotion import EmotionState
-    from game.ninoula.mood_engine import Mood, MoodState, MoodSmug
-    from game.ninoula.pattern_tracker import PatternTracker
-    from game.shots import Alcohol
-    import game.shots as glass
+    from base.game.ninoula.emotion import EmotionState
+    from base.game.ninoula.mood_engine import Mood, MoodState, MoodSmug
+    from base.game.ninoula.pattern_tracker import PatternTracker
+    from base.game.shots import Alcohol
+    import base.game.shots as glass
 
 
 @dataclass
@@ -185,4 +185,78 @@ class ShotScorer:
             base_score += 10.0 if not is_sin else 0.0
             reason = f"gone_random"
 
+        # Modifiers
+
+        # Respect: high respect = plays harder
+        # Applied in _weighted_pick
+        # treats hidden shots differently
+        if not is_hidden and emotion.respect > 0.65 and mood.base == Mood.SMUG:
+            # more careful about avoiding specific shots
+            if "Demon" in tags or "Cursed" in tags:
+                base_score -= 20.0
+                reason += "+respect_avoids_cursed"
+
+        # Engagement: bored Nina is slightly random
+        if emotion.engagement < 0.3:
+            base_score += random.uniform(-8, 8)
+            reason += "+boredom_noise"
+
+        # Suspicion: avoids the glass she thinks the player is making her pick
+        if emotion.suspicion > 0.6:
+            predicted = pattern.predicted_player_pick([i for i, _ in available])
+            if predicted is not None:
+                # avoids the shot
+                non_predicted = [i for i, _ in available if i != predicted]
+                if non_predicted and idx in non_predicted:
+                    base_score += 8.0
+                    reason += "+sus"
+
+        # Favoritism
+        # Loves Hellfire and hates Bittersoul
+        if not is_hidden:
+            if shot == glass.shot_hellfire:
+                base_score += 50.0
+                reason += "+loves_hellfire"
+            elif shot == glass.shot_bittersoul:
+                base_score -= 50.0
+                reason += "+hates_bittersoul"
+
         return base_score, reason
+
+    def _weighted_pick(self,
+                       scored: list[ScoredShot],
+                       emotion: "EmotionState") -> ScoredShot:
+        """
+        Select from scored shots with noise proportional
+        to BAC and inverse to respect.
+
+        Low BAC + high respect = highest score pick
+        High BAC + low respect = basically random
+        """
+        if len(scored) == 1:
+            return scored[0]
+
+        # noise increases with drunk_factor
+        # decreases with respect
+        noise = emotion.drunk_factor * 0.7 - emotion.respect * 0.2
+        noise = max(0.0, min(noise, 0.85))
+
+        # deterministic: sober + respectful = best shot
+        if noise < 0.08:
+            return scored[0]
+
+        # Weight shots by score
+        # noise pulls toward uniform distribution
+        min_score = min(s.score for s in scored)
+        # shift all scores to be positive for weighting
+        shifted = [s.score - min_score + 1.0 for s in scored]
+        # blend with uniform (noise)
+        uniform = 1.0 / len(scored)
+        weights = [
+            (1 - noise) * (s / sum(shifted)) + noise * uniform
+            for s in shifted
+        ]
+
+        # weighted random.choice
+        pick = random.choices(scored, weights=weights, k=1)[0]
+        return pick

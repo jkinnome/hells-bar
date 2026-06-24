@@ -2,7 +2,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.effects import Effect
+    from base.game.effects import Effect
 
 real_flavor_tags: list[str] = ["Clean", "Spirit", "Warm", "Agave", "Floral", "Sweet", "Grape", "Bubbly",
                                "Rice", "Subtle", "Fruit", "Anise", "Void", "Herbal", "Grain", "Pure", "Rough", "Light"]
@@ -513,6 +513,7 @@ all_rare_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Rare)
 all_cursed_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Cursed)
 all_sin_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Sin)
 all_special_alcohols: list[Alcohol] = build_alcohol_list(Rarity.Special)
+
 
 def flavor_tag_exists(alcohol_list: list[Alcohol]) -> None:
     """Checks all alcohols to see if the flavor tags match with what's available. If not, raises a ValueError."""

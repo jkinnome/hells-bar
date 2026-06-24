@@ -3,13 +3,13 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, Optional
 
-from game.eventbus import EventType, EventBus
-from game.trinkets.base import TrinketEffect, Trinket
+from base.game.eventbus import EventType, EventBus
+from base.game.trinkets.base import TrinketEffect, Trinket
 
 if TYPE_CHECKING:
-    from game.state import GameState
-    from game.ninoula.ninoula import Ninoula
-    from game.shots import Alcohol
+    from base.game.state import GameState
+    from base.game.ninoula.ninoula import Ninoula
+    from base.game.shots import Alcohol
 
 MAX_SLOTS = 2  # base, 3 after unlock
 

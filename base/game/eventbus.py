@@ -12,7 +12,7 @@ from collections import defaultdict, deque
 from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.events import EventType, GameEvent
+    from base.game.events import EventType, GameEvent
 
 """Edited EventBus to fit Hell's Bar"""
 

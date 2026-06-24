@@ -6,11 +6,11 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from typing import Optional, TYPE_CHECKING
 
-from game.eventbus import EventBus
-from game.trinkets.manager import TrinketManager
+from base.game.eventbus import EventBus
+from base.game.trinkets.manager import TrinketManager
 
 if TYPE_CHECKING:
-    from game.shots import Alcohol
+    from base.game.shots import Alcohol
 
 
 class RunOutcome(Enum):

@@ -15,22 +15,20 @@ import os
 import pathlib
 import random
 import sys
+from platformdirs import user_data_path
 
 """edited for Hell's Bar"""
 
 
-def getAppDataFilePath() -> pathlib.Path:
-    cache_dir = pathlib.Path(os.environ.get("APPDATA", pathlib.Path.home())) / "Hell's_Bar"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    return cache_dir
-
+def app_data_path() -> pathlib.Path:
+    return user_data_path("Hell's-Bar", "JK3vlar")
 
 LANGUAGES: dict[str, str] = {
     "en": "English",
 }
 
 HOME: pathlib.Path = pathlib.Path.home() / "data" / "langs"
-CACHE: pathlib.Path = getAppDataFilePath() / "lang_cache.txt"
+CACHE: pathlib.Path = app_data_path() / "lang.txt"
 
 
 class Language:
@@ -168,7 +166,7 @@ class Language:
             print()
             lang_choice = input("Select language: ")
             if lang_choice in LANGUAGES:
-                getAppDataFilePath().mkdir(parents=True, exist_ok=True)
+                app_data_path().mkdir(parents=True, exist_ok=True)
                 with open(CACHE, "w") as f:
                     f.write(lang_choice)
                 break

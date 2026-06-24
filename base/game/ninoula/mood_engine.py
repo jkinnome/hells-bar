@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from game.state import GameState
-from game.trinkets.manager import TrinketManager
+from base.game.state import GameState
+from base.game.trinkets.manager import TrinketManager
 
 if TYPE_CHECKING:
-    from game.ninoula.emotion import EmotionState
+    from base.game.ninoula.emotion import EmotionState
 
 
 class MoodSmug(Enum):

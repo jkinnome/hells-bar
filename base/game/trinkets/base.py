@@ -6,10 +6,10 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from game.state import GameState
-    from game.ninoula.ninoula import Ninoula
-    from game.eventbus import GameEvent
-    from game.shots import Alcohol
+    from base.game.state import GameState
+    from base.game.ninoula.ninoula import Ninoula
+    from base.game.eventbus import GameEvent
+    from base.game.shots import Alcohol
 
 
 class TrinketRarity(Enum):

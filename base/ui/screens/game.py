@@ -1,6 +1,6 @@
 from textual.screen import Screen
 
-from game.corruption import CorruptableLabel
+from base.game.corruption import CorruptableLabel
 
 
 class GameScreen(Screen):

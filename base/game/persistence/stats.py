@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from game.state import RunStats, RunOutcome
+from base.game.state import RunStats, RunOutcome
 
 
 @dataclass

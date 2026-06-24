@@ -2,7 +2,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from game.effects import Effect
+    from base.game.effects import Effect
 
 
 class CardType(Enum):

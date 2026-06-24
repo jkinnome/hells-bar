@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.persistence.manager import PersistenceManager
-    from game.state import GameState, RunOutcome
+    from base.game.persistence.manager import PersistenceManager
+    from base.game.state import GameState, RunOutcome
 
 
 @dataclass
@@ -34,7 +34,7 @@ class MetaProgressionManager:
         Called after every run. Checks all unlock conditions.
         Returns list of newly earned unlocks.
         """
-        from game.state import RunOutcome
+        from base.game.state import RunOutcome
         newly_unlocked = []
         runs = self.persistence.runs_played + 1  # +1 for the run just completed
 

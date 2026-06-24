@@ -29,7 +29,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Static
 
-from game.textengine import AsyncTextEngine, pauses
+from base.game.textengine import AsyncTextEngine, pauses
 
 
 class TypewriterDialogue(Widget):

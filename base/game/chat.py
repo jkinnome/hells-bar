@@ -6,10 +6,10 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.ninoula.emotion import EmotionState
-    from game.ninoula.ninoula import Ninoula, Mood
-    from game.state import GameState
-    from game.shots import shot_water
+    from base.game.ninoula.emotion import EmotionState
+    from base.game.ninoula.ninoula import Ninoula, Mood
+    from base.game.state import GameState
+    from base.game.shots import shot_water
 
 
 class ChatAction(Enum):

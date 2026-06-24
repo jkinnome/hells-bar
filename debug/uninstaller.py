@@ -2,13 +2,19 @@ import importlib.util
 import subprocess
 import sys
 from time import sleep
+from pathlib import Path
 
-REQUIRED: dict[str, str] = {
-    "rich": "rich",
-    "pygame": "pygame-ce",
-    "textual": "textual",
-}
+required: Path = Path(__file__).resolve().parent.parent / "requirements.txt"
 
+
+def populate() -> list[str]:
+    libraries: list[str] = []
+    with open(required) as f:
+        for lines in f.readlines():
+            line = lines.strip()
+            if line:
+                libraries.append(line)
+    return libraries
 
 class ProgressBar:
     def __init__(self, total: int, width: int = 30, fill: str = '█',
@@ -38,21 +44,13 @@ class ProgressBar:
             print()
 
 
-def teardown(required: dict[str, str]) -> None:
-    print("Searching for installed packages to remove...")
-
-    # Opposite of setup: find packages where find_spec SUCCEEDS (they exist)
-    installed = [
-        pip_name
-        for import_name, pip_name in required.items()
-        if importlib.util.find_spec(import_name) is not None
-    ]
-
+def teardown(installed: list[str]) -> None:
     if installed:
         print(f"Uninstalling {', '.join(installed)}...")
         bar: ProgressBar = ProgressBar(len(installed))
         for package in installed:
             subprocess.check_call(
+                # fine if package doesn't exist/isn't installed
                 [sys.executable, "-m", "pip", "uninstall", package, "-y"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
@@ -69,7 +67,11 @@ def teardown(required: dict[str, str]) -> None:
 
 
 if __name__ == "__main__":
+    REQUIRED = populate()
     sys.stdout.write("\033]2;uninstaller\007")  # change title
     sys.stdout.write('\033[?25l')  # hide cursor
     sys.stdout.flush()
-    teardown(REQUIRED)
+    try:
+        teardown(REQUIRED)
+    finally:
+        sys.stdout.write('\033[?25h')  # show cursor before exiting

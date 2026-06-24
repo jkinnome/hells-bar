@@ -5,7 +5,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 if TYPE_CHECKING:
-    from game.shots import Alcohol
+    from base.game import Alcohol
 
 
 class ShotGlass(Widget):

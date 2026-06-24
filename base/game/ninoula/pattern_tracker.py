@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.shots import Alcohol
+    from base.game.shots import Alcohol
 
 
 @dataclass

@@ -5,8 +5,8 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from game.state import GameState
-    from game.ninoula.ninoula import Ninoula
+    from base.game.state import GameState
+    from base.game.ninoula.ninoula import Ninoula
 
 
 class EffectTarget(Enum):

@@ -3,14 +3,13 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
-from game.eventbus import EventBus
-from game.events import EventType, GameEvent
-from game.trinkets.base import Trinket, TrinketEffect, TrinketRarity, SlotWeight
-from game.persistence.stats import AllTimeStats
+from base.game.events import EventType
+from base.game.trinkets.base import Trinket, TrinketEffect, TrinketRarity, SlotWeight
+from base.game.persistence.stats import AllTimeStats
 ...
 
 if TYPE_CHECKING:
-    from game.state import GameState, RoundPhase
+    from base.game.state import GameState, RoundPhase
 
 
 # Passive Trinkets

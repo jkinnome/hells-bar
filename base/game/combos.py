@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
-    from game.state import GameState
-    from game.ninoula.ninoula import Ninoula
+    from base.game.state import GameState
+    from base.game.ninoula.ninoula import Ninoula
 
 
 @dataclass
