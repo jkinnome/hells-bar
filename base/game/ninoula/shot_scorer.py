@@ -73,7 +73,7 @@ class ShotScorer:
             score, reason = self._score_shot(
                 idx, shot, mood, emotion, pattern, available
             )
-            scored.append(ScoredShot(index=idx, score=score))
+            scored.append(ScoredShot(index=idx, score=score, reasoning=reason))
 
         # Sort best-first
         scored.sort(key=lambda x: x.score, reverse=True)
@@ -223,8 +223,8 @@ class ShotScorer:
 
         return base_score, reason
 
-    def _weighted_pick(self,
-                       scored: list[ScoredShot],
+    @staticmethod
+    def _weighted_pick(scored: list[ScoredShot],
                        emotion: "EmotionState") -> ScoredShot:
         """
         Select from scored shots with noise proportional
