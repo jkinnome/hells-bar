@@ -1,3 +1,6 @@
 rich
 textual
 pygame-ce
+platformdirs
+lupa
+cryptography
