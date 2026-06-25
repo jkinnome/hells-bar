@@ -35,6 +35,7 @@ class EffectTrigger(Enum):
 
 class Alcohol:
     def __init__(self,
+                 id: str,
                  name: str,
                  abv: float,
                  rarity: Rarity,
@@ -56,6 +57,7 @@ class Alcohol:
 # ---- WATER ----------------------------
 """Water: Not an alcohol, still counts as a shot."""
 shot_water: Alcohol = Alcohol(
+    id="water",
     name="Water",
     abv=0.0,
     rarity=Rarity.Special,
@@ -66,6 +68,7 @@ shot_water: Alcohol = Alcohol(
 # ---- REAL ALCOHOLS --------------------
 """Vodka: The base alcohol. No effect."""
 shot_vodka: Alcohol = Alcohol(
+    id="vodka",
     name="Vodka",
     abv=0.4,
     rarity=Rarity.Common,
@@ -75,6 +78,7 @@ shot_vodka: Alcohol = Alcohol(
 
 """Bourbon: Slight spite generation."""
 shot_bourbon: Alcohol = Alcohol(
+    id="bourbon",
     name="Bourbon",
     abv=0.45,
     rarity=Rarity.Common,
@@ -84,6 +88,7 @@ shot_bourbon: Alcohol = Alcohol(
 
 """Whiskey: No effect."""
 shot_whiskey: Alcohol = Alcohol(
+    id="whiskey",
     name="Whiskey",
     abv=0.50,
     rarity=Rarity.Common,
@@ -93,6 +98,7 @@ shot_whiskey: Alcohol = Alcohol(
 
 """Brandy: No effect."""
 shot_brandy: Alcohol = Alcohol(
+    id="brandy",
     name="Brandy",
     abv=0.40,
     rarity=Rarity.Common,
@@ -102,6 +108,7 @@ shot_brandy: Alcohol = Alcohol(
 
 """Ale: No effect."""
 shot_ale: Alcohol = Alcohol(
+    id="ale",
     name="Ale",
     abv=0.12,
     rarity=Rarity.Common,
@@ -111,6 +118,7 @@ shot_ale: Alcohol = Alcohol(
 
 """Tequila: Gives courage."""
 shot_tequila: Alcohol = Alcohol(
+    id="tequila",
     name="Tequila",
     abv=0.38,
     rarity=Rarity.Common,
@@ -120,6 +128,7 @@ shot_tequila: Alcohol = Alcohol(
 
 """Gin: Sharpens senses slightly."""
 shot_gin: Alcohol = Alcohol(
+    id="gin",
     name="Gin",
     abv=0.42,
     rarity=Rarity.Common,
@@ -129,6 +138,7 @@ shot_gin: Alcohol = Alcohol(
 
 """Red Wine: Delayed BAC gain."""
 shot_red_wine: Alcohol = Alcohol(
+    id="wine",
     name="Red Wine",
     abv=0.14,
     rarity=Rarity.Common,
@@ -138,6 +148,7 @@ shot_red_wine: Alcohol = Alcohol(
 
 """Champagne: Gives a small BAC reduction."""
 shot_champagne: Alcohol = Alcohol(
+    id="champagne",
     name="Champagne",
     abv=0.12,
     rarity=Rarity.Common,
@@ -147,6 +158,7 @@ shot_champagne: Alcohol = Alcohol(
 
 """Rum: Standard. No effect."""
 shot_rum: Alcohol = Alcohol(
+    id="rum",
     name="Rum",
     abv=0.40,
     rarity=Rarity.Common,
@@ -156,6 +168,7 @@ shot_rum: Alcohol = Alcohol(
 
 """Sake: Low ABV but increases the next source of alcohol"""
 shot_sake: Alcohol = Alcohol(
+    id="sake",
     name="Sake",
     abv=0.17,
     rarity=Rarity.Uncommon,
@@ -165,6 +178,7 @@ shot_sake: Alcohol = Alcohol(
 
 """Schnapps: Extremely sweet."""
 shot_schnapps: Alcohol = Alcohol(
+    id="schnapps",
     name="Schnapps",
     abv=0.2,
     rarity=Rarity.Common,
@@ -174,6 +188,7 @@ shot_schnapps: Alcohol = Alcohol(
 
 """Absinthe: High ABV and corrupts the UI. Nina loves it."""
 shot_absinthe: Alcohol = Alcohol(
+    id="absinthe",
     name="Absinthe",
     abv=0.68,
     rarity=Rarity.Rare,
@@ -183,6 +198,7 @@ shot_absinthe: Alcohol = Alcohol(
 
 """Jägermeister: Neutralizes combos."""
 shot_jaegermeister: Alcohol = Alcohol(
+    id="jaegermeister",
     name="Jägermeister",
     abv=0.35,
     rarity=Rarity.Uncommon,
@@ -192,6 +208,7 @@ shot_jaegermeister: Alcohol = Alcohol(
 
 """Soju: No effect."""
 shot_soju: Alcohol = Alcohol(
+    id="soju",
     name="Soju",
     abv=0.25,
     rarity=Rarity.Uncommon,
@@ -201,6 +218,7 @@ shot_soju: Alcohol = Alcohol(
 
 """Everclear: Extremely high ABV. Increases spite and corruption. Impresses Nina."""
 shot_everclear: Alcohol = Alcohol(
+    id="everclear",
     name="Everclear",
     abv=0.95,
     rarity=Rarity.Rare,
@@ -210,6 +228,7 @@ shot_everclear: Alcohol = Alcohol(
 
 """Moonshine: Blacks out an UI element for a turn."""
 shot_moonshine: Alcohol = Alcohol(
+    id="moonshine",
     name="Moonshine",
     abv=0.6,
     rarity=Rarity.Uncommon,
@@ -219,6 +238,7 @@ shot_moonshine: Alcohol = Alcohol(
 
 """Beer: Weak, reduces BAC gain."""
 shot_beer: Alcohol = Alcohol(
+    id="beer",
     name="Beer",
     abv=0.05,
     rarity=Rarity.Common,
@@ -231,6 +251,7 @@ shot_beer: Alcohol = Alcohol(
 
 """Hellfire: Corrupts an UI element permanently and deals double BAC. Nina's favourite."""
 shot_hellfire: Alcohol = Alcohol(
+    id="hellfire",
     name="Hellfire",
     abv=0.85,
     rarity=Rarity.Rare,
@@ -240,6 +261,7 @@ shot_hellfire: Alcohol = Alcohol(
 
 """Shadowmead: Reverses passive charm/item for the round"""
 shot_shadowmead: Alcohol = Alcohol(
+    id="shadowmead",
     name="Shadowmead",
     abv=0.3,
     rarity=Rarity.Uncommon,
@@ -249,6 +271,7 @@ shot_shadowmead: Alcohol = Alcohol(
 
 """Ectofizz: Double or nothing."""
 shot_ectofizz: Alcohol = Alcohol(
+    id="ectofizz",
     name="Ectofizz",
     abv=0.2,
     rarity=Rarity.Uncommon,
@@ -258,6 +281,7 @@ shot_ectofizz: Alcohol = Alcohol(
 
 """Sip o' Styx: Curse. The next shots will always be hidden."""
 shot_styx: Alcohol = Alcohol(
+    id="styx",
     name="Sip o' Styx",
     abv=0.0,
     rarity=Rarity.Cursed,
@@ -267,6 +291,7 @@ shot_styx: Alcohol = Alcohol(
 
 """Blooddemon: Shares BAC. Nina doesn't like this one."""
 shot_blooddemon: Alcohol = Alcohol(
+    id="blooddemon",
     name="Blooddemon",
     abv=0.6,
     rarity=Rarity.Rare,
@@ -276,6 +301,7 @@ shot_blooddemon: Alcohol = Alcohol(
 
 """Spritepara: Scales ABV with Spite"""
 shot_sprite: Alcohol = Alcohol(
+    id="spritepara",
     name="Spritepara",
     abv=0.1,  # TODO: Placeholder. Formula is ((10 + (Spite * 10)) / 100)
     rarity=Rarity.Rare,
@@ -285,6 +311,7 @@ shot_sprite: Alcohol = Alcohol(
 
 """Memoria: Reveals all shots next round for all"""
 shot_memoria: Alcohol = Alcohol(
+    id="memoria",
     name="Memoria",
     abv=0.15,
     rarity=Rarity.Uncommon,
@@ -294,6 +321,7 @@ shot_memoria: Alcohol = Alcohol(
 
 """Miss Echo: Rewards picking the same spot"""
 shot_echo: Alcohol = Alcohol(
+    id="echo",
     name="Miss Echo",
     abv=0.45,
     rarity=Rarity.Uncommon,
@@ -303,6 +331,7 @@ shot_echo: Alcohol = Alcohol(
 
 """Light Starna: Corruption clears but comes back at double rate"""
 shot_starna: Alcohol = Alcohol(
+    id="starna",
     name="Light Starna",
     abv=0.25,
     rarity=Rarity.Rare,
@@ -312,6 +341,7 @@ shot_starna: Alcohol = Alcohol(
 
 """Bittersoul: Nina absolutely hates this."""
 shot_bittersoul: Alcohol = Alcohol(
+    id="bittersoul",
     name="Bittersoul",
     abv=0.5,
     rarity=Rarity.Uncommon,
@@ -321,6 +351,7 @@ shot_bittersoul: Alcohol = Alcohol(
 
 """Void Dram: Erases one shot if the next round is a standard round, reducing the shot count to 2."""
 shot_void: Alcohol = Alcohol(
+    id="void",
     name="Void",
     abv=0.35,
     rarity=Rarity.Cursed,
@@ -330,6 +361,7 @@ shot_void: Alcohol = Alcohol(
 
 """Idunnol Lite: Divine drink."""
 shot_idunn: Alcohol = Alcohol(
+    id="idunn",
     name="Idunnol Lite",
     abv=0.22,
     rarity=Rarity.Rare,
@@ -339,6 +371,7 @@ shot_idunn: Alcohol = Alcohol(
 
 """Zeusarinha: Fries the drinker's brain for a turn."""
 shot_zeus: Alcohol = Alcohol(
+    id="zeus",
     name="Zeusarinha",
     abv=0.55,
     rarity=Rarity.Rare,
@@ -348,6 +381,7 @@ shot_zeus: Alcohol = Alcohol(
 
 """Siopi: Mute the person who drinks."""
 shot_siopi: Alcohol = Alcohol(
+    id="siopi",
     name="Siopi",
     abv=0.0,
     rarity=Rarity.Cursed,
@@ -358,6 +392,7 @@ shot_siopi: Alcohol = Alcohol(
 
 """Grandmother's Recipe: Corruption doesn't increace, Nina gains atleast 0.01 BAC no matter what."""
 shot_grandmother: Alcohol = Alcohol(
+    id="grandmother",
     name="Grandmother's Recipe",
     abv=0.7,
     rarity=Rarity.Rare,
@@ -370,6 +405,7 @@ shot_grandmother: Alcohol = Alcohol(
 # ---- SIN ALCOHOLS ---------------------
 """SUPERBIA Aureola: The Wine of the Proud."""
 shot_pride: Alcohol = Alcohol(
+    id="pride",
     name="Aureola",
     abv=0.38,
     rarity=Rarity.Sin,
@@ -383,6 +419,7 @@ shot_pride: Alcohol = Alcohol(
 
 """AVARITIA L'Usuraio: The Usurer's Draught"""
 shot_greed: Alcohol = Alcohol(
+    id="greed",
     name="L'Usuraio",
     abv=0.15,  # Increases by 5% per shot you drank this run ((shots_drank * 5) / 100). Caps at 75%.
     rarity=Rarity.Sin,
@@ -393,6 +430,7 @@ shot_greed: Alcohol = Alcohol(
 
 """LUXURIA Tempasta Rosata: The Pink Tempest"""
 shot_lust: Alcohol = Alcohol(
+    id="lust",
     name="Tempasta Rosata",
     abv=0.45,
     rarity=Rarity.Sin,
@@ -405,6 +443,7 @@ shot_lust: Alcohol = Alcohol(
 
 """IRA Sangue dello Stige: Blood of the Styx"""
 shot_wrath: Alcohol = Alcohol(
+    id="wrath",
     name="Sangue dello Stige",
     abv=0.6,
     rarity=Rarity.Sin,
@@ -418,6 +457,7 @@ shot_wrath: Alcohol = Alcohol(
 
 """GULA Il Pantano: The Mire"""
 shot_gluttony: Alcohol = Alcohol(
+    id="gluttony",
     name="Il Pantano",
     abv=0.3,
     rarity=Rarity.Sin,
@@ -431,6 +471,7 @@ shot_gluttony: Alcohol = Alcohol(
 
 """ACCIDIA Acque Nere: The Black Waters"""
 shot_sloth: Alcohol = Alcohol(
+    id="sloth",
     name="Acque Nere",
     abv=0.2,
     rarity=Rarity.Sin,
@@ -442,6 +483,7 @@ shot_sloth: Alcohol = Alcohol(
 
 """INVIDIA Occhio Verde: The Green Eye"""
 shot_envy: Alcohol = Alcohol(
+    id="envy",
     name="Occhio Verde",
     abv=0.1,  # Mirrors the last shot the other person took (minimum 10%)
     rarity=Rarity.Sin,
@@ -454,6 +496,7 @@ shot_envy: Alcohol = Alcohol(
 
 """COCYTUS Ghiaccio di Caina: Ice of Caina"""
 shot_caina: Alcohol = Alcohol(
+    id="caina",
     name="Ghiaccio di Caina",
     abv=0.0,
     rarity=Rarity.Sin,
@@ -466,6 +509,7 @@ shot_caina: Alcohol = Alcohol(
 
 """MALEBOLGE Frode Imbottigliata: Bottled Fraud"""
 shot_fraud: Alcohol = Alcohol(
+    id="fraud",
     name="Frode Imbottigliata",
     abv=0.5,
     rarity=Rarity.Sin,
@@ -478,6 +522,7 @@ shot_fraud: Alcohol = Alcohol(
 # THE RAREST DRINK - TREACHERY
 """PRODITIO Il Terzo Morso: The Third Bite"""
 shot_treachery: Alcohol = Alcohol(
+    id="treachery",
     name="Il Terzo Morso",
     abv=0.8,
     rarity=Rarity.Sin,
