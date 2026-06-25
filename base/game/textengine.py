@@ -31,7 +31,7 @@ Action = tuple[str, object]  # e.g. ('write', '\n') or ('sleep', 0.5)
 # TextEngine
 # ---------------------------------------------------------------------------
 
-# noinspection dh,PyStringConversionWithoutDunderMethod,PyInvalidEscapeSequence,PyAttributeOutsideInit
+# noinspection PyStringConversionWithoutDunderMethod,PyInvalidEscapeSequence,PyAttributeOutsideInit,dh
 class TextEngine:
     """
     A typewriter-style text engine with inline command support.
@@ -97,6 +97,15 @@ class TextEngine:
     # Splits on /(command) tokens AND [Rich markup] tags.
     _SPLIT_RE = re.compile(r'(/\([^)]*\)|\[[^\[\]]*])')
 
+    class TextEngine:
+        __slots__ = (
+            'speed', 'pause_on', '_write_fn',
+            '_current_speed', '_drunk_remaining',
+            '_custom_commands',
+            # Hook overrides (set via set_*_hook):
+            '_on_sfx', '_on_mood', '_on_glitch', '_on_clear',
+        )
+
     def __init__(
             self,
             speed: float = 0.025,
@@ -104,7 +113,10 @@ class TextEngine:
             write_fn: WriteFn | None = None,
     ) -> None:
         self.speed = speed
-        self.pause_on = pause_on or {}
+        # noinspection PyUnresolvedReferences
+        self.pause_on = (
+                            sorted(pause_on.items(), key=lambda kv: len(kv[0]), reverse=True)
+                        ) or {}
         self._write_fn = write_fn  # None → sys.stdout
 
         # Runtime state (reset per typewrite call)
@@ -126,18 +138,19 @@ class TextEngine:
             sys.stdout.write(text)
             sys.stdout.flush()
 
-    def _write_char(self, ch: str) -> None:
+    def _write_char(self, ch: str, drunk_remaining: bool = False) -> None:
         """
         Write one character, applying the drunk effect when active.
         The drunk effect either doubles the character (slur) or swaps its
         case (stumble) at low random probability.
         """
-        if self._drunk_remaining > 0:
+        if drunk_remaining:
             self._drunk_remaining -= 1
             r = random.random()
             if r < 0.15:
-                # Slur: print the character twice, skip the sleep cycle
-                self._write(ch + ch)
+                # Slur: write the character twice. The caller's sleep still
+                # fires after this returns. slurred chars render slightly
+                # slower than normal as a result.
                 return
             if r < 0.25 and ch.isalpha():
                 # Stumble: wrong case
@@ -213,11 +226,11 @@ class TextEngine:
             return [('clear', None)]
 
         # /(sfx:NAME)
-        if m := re.fullmatch(r'sfx:([^+]+)', part):
+        if m := re.fullmatch(r'sfx:(.+)', part):
             return [('sfx', m.group(1))]
 
         # /(mood:NAME)
-        if m := re.fullmatch(r'mood:([^+]+)', part):
+        if m := re.fullmatch(r'mood:(.+)', part):
             return [('mood', m.group(1))]
 
         # /(glitch:N)
@@ -260,8 +273,8 @@ class TextEngine:
         updated state.
         """
         # noinspection PyTypeChecker
-        self._current_speed = speed if speed is not None else self.speed
-        self._drunk_remaining = 0
+        current_speed: float = speed if speed is not None else self.speed
+        drunk_remaining: int = 0
         active_pauses = pause_on if pause_on is not None else self.pause_on
 
         for token in self._SPLIT_RE.split(text):
@@ -278,11 +291,11 @@ class TextEngine:
             if actions is not None:
                 for a_type, a_val in actions:
                     if a_type == 'set_speed':
-                        self._current_speed = float(a_val)
+                        current_speed = float(a_val)
                     elif a_type == 'set_speed_rel':
-                        self._current_speed *= float(a_val)
+                        current_speed *= float(a_val)
                     elif a_type == 'set_drunk':
-                        self._drunk_remaining = int(a_val)
+                        drunk_remaining = int(a_val)
                     else:
                         yield (a_type, a_val)
                 continue
@@ -296,15 +309,15 @@ class TextEngine:
                     end = i + len(trigger)
                     if token[i:end] == trigger:
                         # Write the trigger as an atomic unit, then pause
-                        yield ('write', trigger)
+                        yield ('write', trigger)  # doesn't decrement drunk remaining
                         yield ('sleep', duration)
                         i = end
                         paused = True
                         break
                 if not paused:
-                    yield ('write_char', token[i])
-                    if self._current_speed:
-                        yield ('sleep', self._current_speed)
+                    yield ('write_char', token[i], drunk_remaining > 0)
+                    if current_speed:
+                        yield ('sleep', current_speed)
                     i += 1
 
     # ------------------------------------------------------------------
@@ -316,7 +329,7 @@ class TextEngine:
         if a_type == 'write':
             self._write(str(a_val))
         elif a_type == 'write_char':
-            self._write_char(str(a_val))
+            self._write_char(str(a_val), self._drunk_remaining > 0)
         elif a_type == 'sleep':
             d = float(a_val)  # type: ignore[arg-type]
             if d > 0:
@@ -358,7 +371,7 @@ class TextEngine:
     def _do_hicc_sync(self) -> None:
         """Hiccup: stutter pause, dash, recover pause, optional sfx."""
         time.sleep(0.15)
-        self._write('— ')
+        self._write('- ')
         time.sleep(0.30)
         self._on_sfx('hiccup')
 
@@ -510,6 +523,7 @@ class AsyncTextEngine(TextEngine):
         # Inside a Textual async worker:
         await engine.typewrite_async("Hello,/(^0.5) World!")
     """
+    __slots__ = ()
 
     # ------------------------------------------------------------------
     # Async execution
@@ -534,10 +548,9 @@ class AsyncTextEngine(TextEngine):
     @staticmethod
     async def _do_wait_key_async() -> None:
         """
-        Async keypress wait.  In a raw terminal this yields to the event loop.
-        Override in a Textual widget to await an on_key event instead.
+        stub, gets overriden in ui
         """
-        await asyncio.sleep(0)  # yield to event loop; real impl in widget
+        raise NotImplementedError("STUB")
 
     async def _do_hicc_async(self) -> None:
         """Async hiccup — non-blocking pauses."""
