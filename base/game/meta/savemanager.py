@@ -8,6 +8,7 @@ Copyright 2026
 """
 
 import json
+import pickle
 import pathlib
 import shutil
 import sys
