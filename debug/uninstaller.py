@@ -1,8 +1,7 @@
-import importlib.util
 import subprocess
 import sys
-from time import sleep
 from pathlib import Path
+from time import sleep
 
 required: Path = Path(__file__).resolve().parent.parent / "requirements.txt"
 
@@ -15,6 +14,7 @@ def populate() -> list[str]:
             if line:
                 libraries.append(line)
     return libraries
+
 
 class ProgressBar:
     def __init__(self, total: int, width: int = 30, fill: str = '█',
@@ -64,6 +64,20 @@ def teardown(installed: list[str]) -> None:
     print()
     print("Exiting...")
     sleep(2)
+
+
+def directory_teardown(directory: Path, include_subdirs: bool = True, delete_dir: bool = True) -> None:
+    """Recursively deletes all files in a directory including subdirectories. Deletes its own file at the end"""
+    if not directory.is_dir():
+        return
+    files = directory.glob("*")
+    for file in files:
+        if file.is_file():
+            file.unlink()
+        if file.is_dir() and include_subdirs:
+            directory_teardown(file, include_subdirs, delete_dir)
+    if delete_dir:
+        directory.rmdir()
 
 
 if __name__ == "__main__":
