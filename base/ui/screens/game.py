@@ -1,9 +1,17 @@
 from textual.screen import Screen
-
-from base.game.corruption import CorruptableLabel
+from textual import work
+from base.game.ninoula.ninoula import Ninoula, NinaDecision
+from base.game.events import EventType
+from base.game.eventbus import EventBus
+import asyncio
+from base.ui.corruption import CorruptableLabel
 
 
 class GameScreen(Screen):
+    def on_mount(self) -> None:
+        self.nina = Ninoula(runs_played=self.app.persistence.runs_played)
+        self.bus = EventBus()
+
     def compose(self):
         yield CorruptableLabel("BLOOD ALCOHOL CONTENT: ", id="bac-label")
         yield CorruptableLabel("Shot 1 | Shot 2 | Shot 3", id="shot-label")
