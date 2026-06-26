@@ -4,3 +4,4 @@ pygame-ce
 platformdirs
 lupa
 cryptography
+pytest
