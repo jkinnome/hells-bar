@@ -7,6 +7,7 @@ from enum import Enum, auto
 from typing import Optional, TYPE_CHECKING
 
 from base.game.eventbus import EventBus
+from base.game.ninoula.ninoula import Ninoula
 from base.game.trinkets.manager import TrinketManager
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ class RunOutcome(Enum):
     PLAYER_WIN = auto()
     PLAYER_LOSS = auto()
     MUTUAL_DRAW = auto()  # possible via Blackout Dagger card
-    ABANDONED = auto()
+    ABANDONED = auto()  # quit the game mid run
 
 
 class RoundPhase(Enum):
@@ -28,6 +29,7 @@ class RoundPhase(Enum):
     BREATH = auto()
     DRINK = auto()
     OTHER = auto()
+
 
 class Difficulty(Enum):
     FORGIVING = auto()
@@ -79,21 +81,23 @@ class GameState:
     Can be serialized into JSON for saving and loading
     """
     # ---- Basic ----
-    player_name: str = "Darling"
+    player_name: str = "darling"
     seed: int = 0
     run_number: int = 1
     modifier: str = "none"
     difficulty: Difficulty = Difficulty.STANDARD
 
+    # ---- Nina ----
+    nina: "Ninoula" = field(default_factory=Ninoula)
+
     # ---- Round values ----
     player_bac: float = 0.0
-    nina_bac: float = 0.0
     corruption: float = 0.0
     spite: int = 0
     round_number: int = 1
     outcome: RunOutcome = RunOutcome.IN_PROGRESS
     phase: RoundPhase = RoundPhase.INTRO
-    _corruption_multiplier = 1.0
+    _corruption_multiplier: float = field(default=1.0)
 
     # ---- Difficulty config ----
     max_bac: float = 0.4
@@ -101,12 +105,12 @@ class GameState:
     corruption_rate: float = 1.0
 
     # ---- EventBus ----
-    bus: EventBus = EventBus()
+    bus: EventBus = field(default_factory=EventBus)
 
     # ---- Cards & Trinkets ----
     hand: list[str] = field(default_factory=list)  # cards IDs
     equipped_trinkets: list[str] = field(default_factory=list)  # trinket IDs
-    trinkets: TrinketManager = TrinketManager(bus)
+    trinkets: TrinketManager = field(default=None)
 
     # ---- Round state ----
     current_shots: list[Alcohol] = field(default_factory=list)
@@ -123,6 +127,8 @@ class GameState:
     stats: RunStats = field(default_factory=RunStats)
 
     def __post_init__(self) -> None:
+        if self.trinkets is None:
+            self.trinkets = TrinketManager(self.bus)
         cfg = DIFFICULTY_CONFIG[self.difficulty]
         self.max_bac = cfg["max_bac"]
         self.patience_seconds = cfg["patience"]
@@ -145,7 +151,7 @@ class GameState:
 
     # ---- Mutators ----
     def player_drink(self, shot: Alcohol) -> None:
-        gain = shot.abv * 0.005 * self.corruption_rate
+        gain = self.trinkets.on_player_drink(shot, self, self.nina)
         self.player_bac = min(self.player_bac + gain, self.max_bac)
         self.corruption = min(self.corruption + (shot.abv * 0.15) *
                               self.corruption_rate * getattr(self, "_corruption_multiplier", 1.0), 1.0)
@@ -185,10 +191,21 @@ class GameState:
 
     def to_dict(self) -> dict:
         """Serialize for save file. converts enums to strings."""
-        d = asdict(self)
-        d["difficulty"] = self.difficulty.name
-        d["outcome"] = self.outcome.name
-        return d
+        return {
+            "player_name": self.player_name,
+            "seed": self.seed,
+            "run_number": self.run_number,
+            "modifier": self.modifier,
+            "difficulty": self.difficulty.name,
+            "player_bac": self.player_bac,
+            "corruption": self.corruption,
+            "spite": self.spite,
+            "round_number": self.round_number,
+            "outcome": self.outcome.name,
+            "stats": asdict(self.stats),
+            "hand": self.hand,
+            "equipped_trinkets": self.equipped_trinkets,
+        }
 
     @classmethod
     def from_dict(cls, d: dict) -> "GameState":

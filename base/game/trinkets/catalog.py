@@ -4,8 +4,9 @@ import random
 from typing import TYPE_CHECKING
 
 from base.game.events import EventType
-from base.game.trinkets.base import Trinket, TrinketEffect, TrinketRarity, SlotWeight
 from base.game.persistence.stats import AllTimeStats
+from base.game.trinkets.base import Trinket, TrinketEffect, TrinketRarity, SlotWeight
+
 ...
 
 if TYPE_CHECKING:
@@ -32,11 +33,11 @@ class HollowLeg(Trinket):
     rarity = TrinketRarity.COMMON
 
     def on_equip(self, state, nina):
-        state.max_bax = 0.45
+        state.max_bac = 0.45
         return None
 
     def on_run_start(self, state, nina):
-        state.max_bax = 0.45  # reapply
+        state.max_bac = 0.45  # reapply
         return None
 
 
@@ -217,6 +218,7 @@ class SpiteVial(Trinket):
             return TrinketEffect(spite_flat=amount)
         return None
 
+
 class HouseRules(Trinket):
     id = "house_rules"
     name = "The House Rules"
@@ -274,6 +276,7 @@ class BorrowedLuck(Trinket):
         # add a borrow option in pick phase which replaces a shot with a random one from the common pool
         # when used, this uses up the charge and makes borrow not appear anymore
 
+
 # --- Relics ---
 class NinasCoaster(Trinket):
     id = "ninas_coaster"
@@ -299,7 +302,7 @@ class NinthGlass(Trinket):
     max_charges = 1
 
     def on_round_start(self, state, nina):
-        nina.drink(35)
+        nina.emotion.drink(35)
 
         # something like
         # EventBus.emit(event=GameEvent(type=EventType.REACT_NINA_BLUNDER, payload={"ninth_glass": True}))
@@ -333,6 +336,7 @@ class BrokenHourglass(Trinket):
         if state.phase == RoundPhase.BREATH:
             ...
             # Freeze BreathPhase timer when player presses H. then do something like _frozen = true and self.set_timer(60, self._unfreeze)
+
 
 # --- Secret Trinkets ---
 class MemoryFragment(Trinket):
@@ -371,7 +375,7 @@ class NinasCoin(Trinket):
     rarity = TrinketRarity.SECRET
 
     def on_run_start(self, state, nina):
-        nina.affection += 0.05
+        return TrinketEffect(affection_delta=0.05)
 
 
 class LastTab(Trinket):
@@ -394,10 +398,8 @@ class VoidResidue(Trinket):
     max_charges = 1
 
     def on_nina_drink(self, shot, state, nina):
-        nina.tension += 0.15
-        nina.engagement += 0.1
+        return TrinketEffect(tension_delta=0.15, engagement_delta=0.1)
         # During Nina's animation add Void Pick binding which cancels her first pick and forces her a new one
-
 
 
 # --- Registry ---

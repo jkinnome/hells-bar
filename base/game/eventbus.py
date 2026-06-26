@@ -7,7 +7,6 @@ Created by JK
 Copyright 2026
 """
 
-# ibgbggbgbbfvb7zhnmijm,ikok.ol.pö-pö-ok,ujnhzbtfcrdxwsyqa<<<<<yxcvbnm,.äölkasdfghjklöä#qwertzuiopjntgok,humijmhzhgng
 from collections import defaultdict, deque
 from typing import Callable, TYPE_CHECKING
 
@@ -84,7 +83,7 @@ class EventBus:
     def flush(self) -> None:
         """Fire all queued events in order. Call once per game loop tick."""
         while self._queue:
-            event, data = self._queue.popleft()
+            event = self._queue.popleft()
             self.emit(event)
 
     @staticmethod

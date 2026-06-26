@@ -38,6 +38,9 @@ class TrinketEffect:
     spite_flat: int = 0  # flat Spite addition
     affection_delta: float = 0.0
     tension_delta: float = 0.0
+    engagement_delta: float = 0.0
+    suspicion_delta: float = 0.0
+    respect_delta: float = 0.0
     corruption_multiplier: float = 1.0
     cancel_blackout: bool = False  # Painkiller Tin
     set_bac_to: Optional[float] = None

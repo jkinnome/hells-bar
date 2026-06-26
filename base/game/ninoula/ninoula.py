@@ -1,19 +1,17 @@
 from __future__ import annotations
+
 import time
-import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from base.game.cards import Card
 from base.game.ninoula.emotion import EmotionState
-from base.game.ninoula.mood_engine import MoodEngine, MoodState, SubMood, Mood
+from base.game.ninoula.mood_engine import MoodEngine, MoodState, SubMood, Mood, MoodTipsy
 from base.game.ninoula.pattern_tracker import PatternTracker, TurnRecord
 from base.game.ninoula.shot_scorer import ShotScorer, ScoredShot
 from base.game.ninoula.tell_generator import TellGenerator, ActiveTell
 
 if TYPE_CHECKING:
     from base.game.state import GameState
-    from base.game.eventbus import EventBus
     from base.game.shots import Alcohol, Rarity, Visibility
 
 
@@ -45,7 +43,7 @@ class Ninoula:
 
     def __init__(self, runs_played: int = 0):
         self.emotion = EmotionState()
-        self._mood_eng = MoodEngine()
+        self._mood_eng = MoodEngine(GameState.trinkets)
         self._pattern = PatternTracker()
         self._scorer = ShotScorer()
         self._tells = TellGenerator()
@@ -95,8 +93,8 @@ class Ninoula:
         )
 
         # Decide immediately in some moods (table tap tell)
-        immediate_moods: set[Mood] = {Mood.SMUG, Mood.SMUG.IMPRESSED, Mood.IRRITATED}
-        if self.mood in immediate_moods and self.emotion.drunk_factor < 0.4:
+        immediate_moods: set[Mood] = {Mood.SMUG, Mood.IRRITATED}
+        if self.mood.base in immediate_moods and self.emotion.drunk_factor < 0.4:
             self._already_decided = True
 
         # Set glass avoidance flag (generates "look away" tell)
@@ -206,7 +204,7 @@ class Ninoula:
             reaction_key = "player_picks_high_abv"
 
         # Cautious pick (low abv, third in a row)
-        elif abv < 15 and self._pattern.current_low_streak >= 3:
+        elif abv < 0.15 and self._pattern.current_low_streak >= 3:
             self.emotion.shift_engagement(-0.06)
             reaction_key = "low_streak"
 
@@ -277,7 +275,9 @@ class Ninoula:
         # Diminishing returns at high affection
         base = 0.12 if self.emotion.bac > 0.15 else 0.07
         mult = 0.5 if self.emotion.affection >= 0.7 else 1.0
-        delta = base * mult
+        # Silver Tongue modifier
+        bonus = 0.12 if GameState.trinkets.has("silver_tongue") else 0.0
+        delta = base * mult + bonus
         self.emotion.shift_affection(delta)
         self._mood_eng.evaluate(self.emotion)
         return delta
@@ -306,7 +306,7 @@ class Ninoula:
             return "taunt_manic_backfire", 0.15
 
         elif self.mood.base == Mood.TIPSY:
-            self.emotion.shift_tension(0.8)
+            self.emotion.shift_tension(0.08)
             self._mood_eng.evaluate(self.emotion)
             return "taunt_lands_tipsy", 0.08
 
@@ -318,7 +318,8 @@ class Ninoula:
                 Returns (reaction_key, affection_delta).
                 Rare soft response when Tipsy_Soft + high affection.
                 """
-        if (self.mood.base == Mood.TIPSY.SOFT
+        if (self.mood.base == Mood.TIPSY
+                and self.mood.sub == MoodTipsy.SOFT
                 and self.emotion.affection > 0.50
                 and self.emotion.mask_strength < 0.45):
             delta = 0.18

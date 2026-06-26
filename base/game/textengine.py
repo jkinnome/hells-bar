@@ -97,14 +97,13 @@ class TextEngine:
     # Splits on /(command) tokens AND [Rich markup] tags.
     _SPLIT_RE = re.compile(r'(/\([^)]*\)|\[[^\[\]]*])')
 
-    class TextEngine:
-        __slots__ = (
-            'speed', 'pause_on', '_write_fn',
-            '_current_speed', '_drunk_remaining',
-            '_custom_commands',
-            # Hook overrides (set via set_*_hook):
-            '_on_sfx', '_on_mood', '_on_glitch', '_on_clear',
-        )
+    __slots__ = (
+        'speed', 'pause_on', '_write_fn',
+        '_current_speed', '_drunk_remaining',
+        '_custom_commands',
+        # Hook overrides (set via set_*_hook):
+        '_on_sfx', '_on_mood', '_on_glitch', '_on_clear',
+    )
 
     def __init__(
             self,

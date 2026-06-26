@@ -75,11 +75,11 @@ class MoodEngine:
     """
     RESISTANCE_TURNS: int = 2  # turns to wait before natural mood transition
 
-    def __init__(self):
+    def __init__(self, trinket_manager: TrinketManager):
         self._current: MoodState = MoodState(Mood.SMUG, changed=False)
         self._target: Mood = Mood.SMUG
         self._turns_at_target: int = 0
-        self._trinket_mgr: TrinketManager = GameState.trinkets
+        self._trinket_mgr: TrinketManager = trinket_manager
 
     @property
     def current(self) -> MoodState:
