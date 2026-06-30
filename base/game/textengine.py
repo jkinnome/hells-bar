@@ -12,6 +12,7 @@ Copyright 2026
 from __future__ import annotations
 
 import asyncio
+import inspect
 import random
 import re
 import sys
@@ -48,7 +49,7 @@ class TextEngine:
     Basic:
         /(^N)           — pause for N seconds
         /(spd:N)        — set typing speed to N seconds per character
-        /(rst)          — reset speed to the instance default
+        /(rst)          — reset ALL typewriter changes (speed, drunk,  glitch)
         /(n)            — newline
         /(br)           — blank line  (double newline)
         /(t)            — tab
@@ -59,8 +60,11 @@ class TextEngine:
 
     Audio / game hooks (wired up via set_*_hook):
         /(sfx:NAME)     — fire AudioManager sound effect
+        /(wsfx:NAME)    — fire sound, wait for it to finish before continuing
         /(mood:NAME)    — signal a Ninoula mood/MoodEngine transition
         /(glitch:N)     — trigger N corruption ticks on a CorruptableLabel
+        /(glitch)       — turn on persistent corruption for the rest of the
+                           string; cleared by /(rst)
 
     Character effects:
         /(drunk:N)      — drunk typing for the next N characters
@@ -95,6 +99,7 @@ class TextEngine:
     """
 
     # Splits on /(command) tokens AND [Rich markup] tags.
+    # noinspection di
     _SPLIT_RE = re.compile(r'(/\([^)]*\)|\[[^\[\]]*])')
 
     __slots__ = (
@@ -102,9 +107,10 @@ class TextEngine:
         '_current_speed', '_drunk_remaining',
         '_custom_commands',
         # Hook overrides (set via set_*_hook):
-        '_on_sfx', '_on_mood', '_on_glitch', '_on_clear',
+        '_on_sfx', '_on_wsfx', '_on_mood', '_on_glitch', '_on_glitch_toggle', '_on_clear',
     )
 
+    # noinspection PyUnresolvedReferences
     def __init__(
             self,
             speed: float = 0.025,
@@ -124,6 +130,16 @@ class TextEngine:
 
         # User-registered custom command parsers
         self._custom_commands: list[tuple[re.Pattern, Callable[[re.Match], list[Action]]]] = []
+
+        # Hooks default to no-ops, bound here (not as same-named class-body
+        # methods — that conflicts with __slots__ member descriptors and
+        # raises ValueError at class-definition time).
+        self._on_sfx = self._default_sfx
+        self._on_wsfx = self._default_wsfx
+        self._on_mood = self._default_mood
+        self._on_glitch = self._default_glitch
+        self._on_glitch_toggle = self._default_glitch_toggle
+        self._on_clear = self._default_clear
 
     # ------------------------------------------------------------------
     # Write
@@ -194,9 +210,13 @@ class TextEngine:
         if m := re.fullmatch(r'spd:([\d.]+)', part):
             return [('set_speed', float(m.group(1)))]
 
-        # /(rst) — reset speed
+        # /(rst) — reset speed, drunk effect, and persistent glitch
         if part == 'rst':
-            return [('set_speed', self.speed)]
+            return [
+                ('set_speed', self.speed),
+                ('set_drunk', 0),
+                ('glitch_toggle', False),
+            ]
 
         # /(slw) / /(fst) — relative speed
         if part == 'slw':
@@ -228,13 +248,22 @@ class TextEngine:
         if m := re.fullmatch(r'sfx:(.+)', part):
             return [('sfx', m.group(1))]
 
+        # /(wsfx:NAME) — fire sound and wait for it to finish
+        if m := re.fullmatch(r'wsfx:(.+)', part):
+            return [('wsfx', m.group(1))]
+
         # /(mood:NAME)
         if m := re.fullmatch(r'mood:(.+)', part):
             return [('mood', m.group(1))]
 
-        # /(glitch:N)
+        # /(glitch:N) — N corruption ticks (one-shot burst)
         if m := re.fullmatch(r'glitch:(\d+)', part):
             return [('glitch', int(m.group(1)))]
+
+        # /(glitch) — persistent corruption for the rest of the string,
+        # cleared via /(rst)
+        if part == 'glitch':
+            return [('glitch_toggle', True)]
 
         # /(drunk:N)
         if m := re.fullmatch(r'drunk:(\d+)', part):
@@ -281,6 +310,7 @@ class TextEngine:
                 continue
 
             # Rich markup → emit atomically, do not typewrite char by char
+            # noinspection di
             if re.fullmatch(r'\[[^\[\]]*]', token):
                 yield ('write', token)
                 continue
@@ -337,10 +367,16 @@ class TextEngine:
             self._do_wait_key()
         elif a_type == 'sfx':
             self._on_sfx(str(a_val))
+        elif a_type == 'wsfx':
+            # Sync context: the hook itself is expected to block until the
+            # sound finishes (e.g. audio_manager.play_and_wait).
+            self._on_wsfx(str(a_val))
         elif a_type == 'mood':
             self._on_mood(str(a_val))
         elif a_type == 'glitch':
             self._on_glitch(int(a_val))  # type: ignore[arg-type]
+        elif a_type == 'glitch_toggle':
+            self._on_glitch_toggle(bool(a_val))
         elif a_type == 'hicc':
             self._do_hicc_sync()
         elif a_type == 'clear':
@@ -381,10 +417,23 @@ class TextEngine:
     def _on_sfx(self, name: str) -> None:
         ...  # noqa: E701
 
+    def _on_wsfx(self, name: str) -> object:
+        """
+        Default no-op. Override via set_wsfx_hook().
+
+        In a sync context the hook should block until the sound finishes.
+        In an async context the hook may instead return an awaitable
+        (e.g. a coroutine), which AsyncTextEngine will await for you.
+        """
+        ...  # noqa: E701
+
     def _on_mood(self, name: str) -> None:
         ...  # noqa: E701
 
     def _on_glitch(self, n: int) -> None:
+        ...  # noqa: E701
+
+    def _on_glitch_toggle(self, active: bool) -> None:
         ...  # noqa: E701
 
     def _on_clear(self) -> None:
@@ -397,6 +446,19 @@ class TextEngine:
             engine.set_sfx_hook(audio_manager.play_sfx)
         """
         self._on_sfx = fn  # type: ignore[method-assign]
+
+    def set_wsfx_hook(self, fn: Callable[[str], object]) -> None:
+        """
+        Wire AudioManager into /(wsfx:NAME) commands — "wait sfx".
+
+        Sync engine: fn should block until the sound finishes.
+            engine.set_wsfx_hook(audio_manager.play_and_wait)
+
+        Async engine: fn may instead return an awaitable; it will be
+        awaited automatically so the event loop isn't blocked.
+            engine.set_wsfx_hook(audio_manager.play_and_wait_async)
+        """
+        self._on_wsfx = fn  # type: ignore[method-assign]
 
     def set_mood_hook(self, fn: Callable[[str], None]) -> None:
         """
@@ -413,6 +475,18 @@ class TextEngine:
             engine.set_glitch_hook(label.trigger_corruption)
         """
         self._on_glitch = fn  # type: ignore[method-assign]
+
+    def set_glitch_toggle_hook(self, fn: Callable[[bool], None]) -> None:
+        """
+        Wire a CorruptableLabel into bare /(glitch) and /(rst) commands.
+
+        Called with True to start persistent corruption, False to stop it.
+
+            engine.set_glitch_toggle_hook(
+                lambda active: label.start_persistent() if active else label.stop_corruption()
+            )
+        """
+        self._on_glitch_toggle = fn  # type: ignore[method-assign]
 
     def set_clear_hook(self, fn: Callable[[], None]) -> None:
         """
@@ -441,8 +515,10 @@ class TextEngine:
             ('write',  str)    — write text atomically
             ('sleep',  float)  — pause N seconds
             ('sfx',    str)    — fire sfx hook
+            ('wsfx',   str)    — fire sfx hook, wait for it to finish
             ('mood',   str)    — fire mood hook
-            ('glitch', int)    — fire glitch hook
+            ('glitch', int)    — fire a one-shot glitch burst
+            ('glitch_toggle', bool) — start/stop persistent glitch
             ('clear',  None)   — fire clear hook
 
         Example — /(shake:3) triggers 3 glitch ticks and plays a sound:
@@ -541,6 +617,9 @@ class AsyncTextEngine(TextEngine):
             await self._do_wait_key_async()
         elif a_type == 'hicc':
             await self._do_hicc_async()
+        elif a_type == 'wsfx':
+            # noinspection PyStringConversionWithoutDunderMethod
+            await self._do_wsfx_async(str(a_val))
         else:
             self._execute_action(a_type, a_val)
 
@@ -557,6 +636,16 @@ class AsyncTextEngine(TextEngine):
         self._write('— ')
         await asyncio.sleep(0.30)
         self._on_sfx('hiccup')
+
+    async def _do_wsfx_async(self, name: str) -> None:
+        """
+        Async "wait sfx" — calls the wsfx hook, and awaits the result if the
+        hook returned an awaitable. Lets the event loop stay unblocked when
+        the hook is itself async; otherwise behaves like a normal sync call.
+        """
+        result = self._on_wsfx(name)
+        if inspect.isawaitable(result):
+            await result
 
     # ------------------------------------------------------------------
     # Public API (async)
