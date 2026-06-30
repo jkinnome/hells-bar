@@ -1,10 +1,7 @@
 from textual.screen import Screen
-from textual import work
-from base.game.ninoula.ninoula import Ninoula, NinaDecision
-from base.game.events import EventType
+from base.game.ninoula.ninoula import Ninoula
 from base.game.eventbus import EventBus
-import asyncio
-from base.ui.corruption import CorruptableLabel
+from base.ui.widgets.corruption import CorruptableLabel
 
 
 class GameScreen(Screen):
