@@ -8,7 +8,7 @@ mod_api = lua.eval("""
     string = { format = string.format, len = string.len, sub = string.sub },
 
     -- game is restricted
-    game   = nil,
+    game = nil,
 
     -- explicitly absent: os, io, require, package, debug, load, dofile,
     -- loadfile, rawget, rawset, getmetatable, setmetatable, ...
