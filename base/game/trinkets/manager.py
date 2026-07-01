@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, Optional
 
-from base.game.eventbus import EventType, EventBus
+from base.game.eventbus import EventType, EventBus, GameEvent
 from base.game.trinkets.base import TrinketEffect, Trinket
 
 if TYPE_CHECKING:
@@ -108,7 +108,7 @@ class TrinketManager:
 
         # Pass through on_bac_gain hooks
         for t in self._equipped:
-            effect = t.on_player_drink(shot, state)
+            effect = t.on_player_drink(shot, state, nina)
             if effect:
                 gain *= effect.bac_multiplier
                 self._apply_effect(effect, state, nina)
@@ -149,10 +149,20 @@ class TrinketManager:
 
     def _subscribe_to_bus(self) -> None:
         """Subscribe to all events that trinkets might react to."""
-        self._bus.subscribe()
-        self._bus.subscribe()
-        self._bus.subscribe()  # TODO: add events
-        self._bus.subscribe()
+        self._bus.subscribe(EventType.REACT_TRICK_CAUGHT, self._handle_event)
+        self._bus.subscribe(EventType.REACT_COMBO_TRIGGER, self._handle_event)
+        self._bus.subscribe(EventType.REACT_NINA_BLUNDER, self._handle_event)
+        self._bus.subscribe(EventType.MILESTONE_BAC_35, self._handle_event)
+
+    def _handle_event(self, event: GameEvent) -> None:
+        if not self._state or not self._nina:
+            return
+        for t in self._equipped:
+            effect = t.on_event(event, self._state, self._nina)
+            if effect:
+                self._apply_effect(effect, self._state, self._nina)
+
+    # --- Effect Application ---
 
     @staticmethod
     def _apply_effect(effect: TrinketEffect, state: "GameState", nina: "Ninoula") -> None:
