@@ -60,6 +60,9 @@ class Ninoula:
         self._last_scored: list[ScoredShot] = []
         self._decision_start_time: float = 0.0
 
+        # color
+        self.color: str = "#ff6ec7"  # hot pink basically
+
     # --- Core Properties ---
 
     @property
