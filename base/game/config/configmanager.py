@@ -7,10 +7,13 @@ This library exists to easily allow devs to create config files.
 Created by JK
 Copyright 2026
 """
-
+import base.game.config.configs as c
 import json
 import pathlib
 import sys
+
+from base.other.dirs import dirs
+from base.other.log import log
 
 _MISSING = object()  # module-level sentinel
 
@@ -44,7 +47,7 @@ class ConfigManager:
             try:
                 self._data = json.loads(self._path.read_text())
             except json.JSONDecodeError:
-                sys.stderr.write(f"configmanager: WARNING - '{self._path}' is corrupt, falling back to defaults.\n")
+                log.warning(f"'{self._path}' is corrupt, falling back to defaults.")
                 self._data = {}
         else:
             self._data = {}
@@ -52,6 +55,7 @@ class ConfigManager:
     def save(self) -> None:
         """Write current config to disk."""
         self._path.write_text(json.dumps(self._data, indent=2))
+        log.info("saved config")
 
     def get(self, key_path: str, fallback=_MISSING):
         """Get a value. Priority: saved data → defaults → fallback."""
@@ -70,7 +74,8 @@ class ConfigManager:
             except (KeyError, TypeError):
                 if fallback is not _MISSING:
                     return fallback
-                return f"[MISSING]: {key_path}"
+
+                return None
 
     def _set_nested(self, data: dict, keys: list[str], value) -> dict:
         """Recursively drill into nested dicts, creating levels as needed."""
@@ -86,6 +91,7 @@ class ConfigManager:
         """Set a value by dot-path. Creates intermediate dicts as needed.
         If autosave is disabled, you'll need to manually save again."""
         keys = key_path.split(".")
+        log.info(f"{key_path} -> {value}")
         self._set_nested(self._data, keys, value)
         if self.auto_save:
             self.save()
@@ -93,11 +99,13 @@ class ConfigManager:
     def reset(self, key: str) -> None:
         """Remove a key from saved data, reverting to default."""
         self._data.pop(key, None)
+        log.info(f"{key} -> {self._defaults.get(key, None)} (default)")
         if self.auto_save: self.save()
 
     def reset_all(self) -> None:
         """Wipe all saved data, reverting everything to defaults."""
         self._data = {}
+        log.info(f"reset all saved data")
         if self.auto_save: self.save()
 
     def as_dict(self) -> dict:
@@ -107,3 +115,12 @@ class ConfigManager:
     def has(self, key: str) -> bool:
         """Returns True if the key exists in saved data or defaults."""
         return key in self._data or key in self._defaults
+
+    def _deep_merge(self, base: dict, override: dict) -> dict:
+        result = dict(base)
+        for k, v in override.items():
+            if isinstance(v, dict) and isinstance(result.get(k), dict):
+                result[k] = self._deep_merge(result[k], v)
+            else:
+                result[k] = v
+        return result
