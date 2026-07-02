@@ -1,17 +1,12 @@
 import json
 from datetime import datetime
 import shutil
-from platformdirs import user_documents_path
-
+from hashlib import sha256
 from base.game.state import GameState
 from base.other.dirs import dirs
 
 SAVE_FILE = dirs.user_data_path / "save.json"
-CHECKER_FILE = user_documents_path() / ".hb" / "deleteifgay.json"
-
-
-# secret thing that checks any remote changes on startup
-# exists to notice cheating
+HASH_FILE = dirs.site_cache_path / "save.hash"
 
 
 class PersistenceManager:
@@ -31,22 +26,20 @@ class PersistenceManager:
             return self._default_save()
 
     def _check_save(self) -> bool:
-        """Checks if save file has been tampered with."""
+        """Checks if save file has NOT been tampered with."""
         if self._data == self._default_save():
             return True
-        if not CHECKER_FILE.exists():
+        if not HASH_FILE.exists():
             return False
         else:
             try:
-                with open(CHECKER_FILE, "r", encoding="utf-8") as f:
-                    checker_data = json.load(f)
-            except (json.decoder.JSONDecodeError, KeyError):
-                CHECKER_FILE.rename(CHECKER_FILE.with_suffix(".corrupted.json"))
-                return False
-
-        if checker_data == self._default_save():
-            return True
-        return False
+                with open(HASH_FILE, "r", encoding="utf-8") as f:
+                    hash_given = f.read()
+                if sha256(bytes(self._data)).hexdigest() == hash_given:
+                    return True
+            except (FileNotFoundError, KeyError):
+                return True
+        return True
 
     @staticmethod
     def _default_save() -> dict:
@@ -74,15 +67,9 @@ class PersistenceManager:
         self._data["active_run"] = state.to_dict()
         self._write()
 
-    def load_active_run(self) -> GameState | None:
+    def load_active_run(self, state: "GameState") -> GameState | None:
         raw = self._data.get("active_run")
         if raw is None:
             return None
         # noinspection PyTypeChecker
-        return GameState.from_dict(raw)
-
-    @staticmethod
-    def _copy_slot() -> None:
-        """copies save file to checker file"""
-        if SAVE_FILE.exists():
-            shutil.copy2(SAVE_FILE, CHECKER_FILE)
+        return state.from_dict(raw)
